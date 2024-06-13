@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.elsquatrecaps.rsjcb</groupId>
-    <artifactId>netvolution-model</artifactId>
+    <artifactId>netvolution_model</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,6 +21,15 @@
                     <showDeprecation>true</showDeprecation>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                  <repositoryId>github</repositoryId>
+                  <url>https://maven.pkg.github.com/jcanell4/netvolution_model</url>
+                </configuration>
+            </plugin>            
         </plugins>
     </build>
     <dependencies>
@@ -50,9 +59,9 @@
     </dependencies>
     <distributionManagement>
         <repository>
-            <id>portada</id>
-            <name>GitHub portada-git Apache Maven Packages for PortADa project</name>
-            <url>https://maven.pkg.github.com/jcanell4/netvolution-model.git</url>
+            <id>github</id>
+            <name>GitHub owner Apache Maven Packages </name>
+            <url>https://maven.pkg.github.com/jcanell4/netvolution_model</url>
         </repository>
     </distributionManagement>
 </project>
