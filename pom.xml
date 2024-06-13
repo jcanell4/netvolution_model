@@ -52,7 +52,7 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.elsquatrecaps</groupId>
+            <groupId>org.elsquatrecaps.utilities</groupId>
             <artifactId>utilities</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
