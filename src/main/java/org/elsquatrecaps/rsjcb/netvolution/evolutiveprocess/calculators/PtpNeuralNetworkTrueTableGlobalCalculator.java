@@ -13,38 +13,25 @@ import org.elsquatrecaps.utilities.tools.ComparableArrayOf;
  * @author josep
  */
 public class PtpNeuralNetworkTrueTableGlobalCalculator{
-    List<PtpNeuralNetworkSinglePropertyCalculator> performanceCalculators= new ArrayList<>();
+    List<PtpNeuralNetworkSinglePropertyCalculator> vitalAdvantageCalculators= new ArrayList<>();
     List<PtpNeuralNetworkSinglePropertyCalculator> reproductuvaAdvantageCalculators= new ArrayList<>();
 
-//    public PtpNeuralNetworkTrueTableGlobalCalculator(String[] performanceCalculators, String[] reproductiveAdvantageCalculators) {
-//        this(Arrays.asList(performanceCalculators), Arrays.asList(reproductiveAdvantageCalculators));        
+//    public PtpNeuralNetworkTrueTableGlobalCalculator(String[] vitalAdvantageCalculators, String[] reproductiveAdvantageCalculators) {
+//        this(Arrays.asList(vitalAdvantageCalculators), Arrays.asList(reproductiveAdvantageCalculators));        
 //    }
     
-    public PtpNeuralNetworkTrueTableGlobalCalculator(String[] performanceCalculators, String[] reproductiveAdvantageCalculators, Float[][] environmentInputSet, Float[][] environmentOutputSet) {
-        this(Arrays.asList(performanceCalculators), Arrays.asList(reproductiveAdvantageCalculators), environmentInputSet, environmentOutputSet);        
+    public PtpNeuralNetworkTrueTableGlobalCalculator(String[] vitalAdvantageCalculators, String[] reproductiveAdvantageCalculators, Float[][] environmentInputSet, Float[][] environmentOutputSet) {
+        this(Arrays.asList(vitalAdvantageCalculators), Arrays.asList(reproductiveAdvantageCalculators), environmentInputSet, environmentOutputSet);        
     }
     
-//    public PtpNeuralNetworkTrueTableGlobalCalculator(List<String> performanceCalculators, List<String> reproductiveAdvantageCalculators) {
-//        for(String k: performanceCalculators){
-//            if("performance".equals(k) && SinglePropertyCalculatorItems.getItem(k).getInstance() instanceof PtpNeuralNetworkTrueTableSinglePropertyCalculator
-//                    || !"performance".equals(k)){
-//                this.performanceCalculators.add(SinglePropertyCalculatorItems.getItem(k).getInstance());
-//            }
-//        }
-//        for(String k: reproductiveAdvantageCalculators){
-//            this.reproductuvaAdvantageCalculators.add(SinglePropertyCalculatorItems.getItem(k).getInstance());
-//        }
-//        
-//    }
-    
-    public PtpNeuralNetworkTrueTableGlobalCalculator(List<String> performanceCalculators, List<String> reproductiveAdvantageCalculators, Float[][] environmentInputSet, Float[][] environmentOutputSet) {
+    public PtpNeuralNetworkTrueTableGlobalCalculator(List<String> vitalAdvantageCalculators, List<String> reproductiveAdvantageCalculators, Float[][] environmentInputSet, Float[][] environmentOutputSet) {
         PtpNeuralNetworkDifTableSinglePropertyCalculator calc = (PtpNeuralNetworkDifTableSinglePropertyCalculator) SinglePropertyCalculatorItems.getItem("performance").getInstance();
-        this.performanceCalculators.add(calc);
+        this.vitalAdvantageCalculators.add(calc);
         for(int i=0; i<environmentInputSet.length; i++){
             calc.addValueCorrespondence(new ComparableArrayOf<>(environmentInputSet[i]), new ComparableArrayOf<>(environmentOutputSet[i]));
         }
-        for(String k: performanceCalculators){
-            this.performanceCalculators.add(SinglePropertyCalculatorItems.getItem(k).getInstance());
+        for(String k: vitalAdvantageCalculators){
+            this.vitalAdvantageCalculators.add(SinglePropertyCalculatorItems.getItem(k).getInstance());
         }
         for(String k: reproductiveAdvantageCalculators){
             this.reproductuvaAdvantageCalculators.add(SinglePropertyCalculatorItems.getItem(k).getInstance());
@@ -52,34 +39,47 @@ public class PtpNeuralNetworkTrueTableGlobalCalculator{
     }
     
     public PerformaceAndReproductiveAdvantage calculate(PtpNeuralNetwork agent){
-        BigDecimal p=BigDecimal.ZERO;
+        BigDecimal p = BigDecimal.ZERO;
+        BigDecimal va=BigDecimal.ZERO;
         BigDecimal ra=BigDecimal.ZERO;
-        for(PtpNeuralNetworkSinglePropertyCalculator calc: performanceCalculators){
-            p = p.add(calc.calculate(agent));
+        
+        va = p = vitalAdvantageCalculators.get(0).calculate(agent);
+        for(int i=1; i<vitalAdvantageCalculators.size(); i++){
+            PtpNeuralNetworkSinglePropertyCalculator calc = vitalAdvantageCalculators.get(i);
+            va = va.add(calc.calculate(agent));
         }
         for(PtpNeuralNetworkSinglePropertyCalculator calc: reproductuvaAdvantageCalculators){
             ra = ra.add(calc.calculate(agent));
         }
-        return new PerformaceAndReproductiveAdvantage(p, ra); 
+        return new PerformaceAndReproductiveAdvantage(p, va, ra); 
     }
     
     public static class PerformaceAndReproductiveAdvantage{
-        private BigDecimal reproductuvaAdvantage;
-        private BigDecimal performace;
+        final private BigDecimal performance;
+        final private BigDecimal reproductuvaAdvantage;
+        final private BigDecimal vitalAdvantage;
 
         public PerformaceAndReproductiveAdvantage(BigDecimal performace) {
             this.reproductuvaAdvantage = BigDecimal.ZERO;
-            this.performace = performace;
+            this.performance = this.vitalAdvantage = performace;
         }
         
-        public PerformaceAndReproductiveAdvantage(BigDecimal performace, BigDecimal reproductuvaAdvantage) {
+        public PerformaceAndReproductiveAdvantage(BigDecimal performace, BigDecimal vitalAdvantage) {
+            this.reproductuvaAdvantage = BigDecimal.ZERO;
+            this.vitalAdvantage = vitalAdvantage;
+            this.performance = performace;
+        }
+        
+        public PerformaceAndReproductiveAdvantage(BigDecimal performace, BigDecimal vitalAdvantage, BigDecimal reproductuvaAdvantage) {
             this.reproductuvaAdvantage = reproductuvaAdvantage;
-            this.performace = performace;
+            this.vitalAdvantage = vitalAdvantage;
+            this.performance = performace;
         }
 
         public PerformaceAndReproductiveAdvantage() {
             this.reproductuvaAdvantage = BigDecimal.ZERO;
-            this.performace = BigDecimal.ZERO;
+            this.vitalAdvantage = BigDecimal.ZERO;
+            this.performance = BigDecimal.ZERO;
         }
 
         public BigDecimal getReproductiveAdvantage(boolean reproductiveAdvantageOnly) {
@@ -93,12 +93,18 @@ public class PtpNeuralNetworkTrueTableGlobalCalculator{
         }
         
         public BigDecimal getReproductiveAdvantage() {
-            return reproductuvaAdvantage.add(performace);
+            return reproductuvaAdvantage.add(vitalAdvantage);
         }
 
-        public BigDecimal getPerformace() {
-            return performace;
+        public BigDecimal getVitalAdvantage() {
+            return vitalAdvantage;
         }
 
+        /**
+         * @return the performance
+         */
+        public BigDecimal getPerformance() {
+            return performance;
+        }
     }
 }

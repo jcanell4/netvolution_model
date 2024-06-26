@@ -97,7 +97,9 @@ public class PtpVectorNeuralNetworkBaseUpdatingProcessor {
         for(int i=0; i<net.getMaxNeuronsLength(); i++){
             if(net.getWeight(i, to)!=0 && !net.getNeuron(i).isPathToOutput()){
                 net.getNeuron(i).setPathToOutput(true);
-                updateCascadePathToOutputForNewParticipation(i, net);
+                if(!net.getNeuron(i).isPathToOutput()){
+                    updateCascadePathToOutputForNewParticipation(i, net);
+                }
             }
         }
     }
@@ -112,7 +114,7 @@ public class PtpVectorNeuralNetworkBaseUpdatingProcessor {
     }
         
     private static boolean isNowParticipatingToOutput(int n, int except, PtpVectorNeuralNetwork net){
-        boolean ret = false;
+        boolean ret = net.getNeuron(n).isOutputType();
         for(int i=0; !ret && i<net.getMaxNeuronsLength(); i++){
             if(i!=except){
                 ret = net.getWeight(n, i)!=0 && net.getNeuron(i).isPathToOutput();
@@ -122,7 +124,7 @@ public class PtpVectorNeuralNetworkBaseUpdatingProcessor {
     }
     
     private static boolean isNowParticipatingFromInput(int n, int except, PtpVectorNeuralNetwork net){
-        boolean ret = false;
+        boolean ret = net.getNeuron(n).isInputType();
         for(int i=0; !ret && i<net.getMaxNeuronsLength(); i++){
             if(i!=except){
                 ret = net.getWeight(i, n)!=0 && net.getNeuron(i).isPathFromInput();

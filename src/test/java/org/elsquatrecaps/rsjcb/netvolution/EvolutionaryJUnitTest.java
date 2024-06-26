@@ -130,6 +130,9 @@ public class EvolutionaryJUnitTest {
         test.setUp();
         test.mutationTest2();
         test.tearDown();
+        test.setUp();
+        test.mutationTest3();
+        test.tearDown();
         
         EvolutionaryJUnitTest.tearDownClass();
     }    
@@ -351,7 +354,7 @@ public class EvolutionaryJUnitTest {
         
         net.getNeuron(9).changeBias(-0.50f);
         
-        muteAndPrint(net);
+        muteAndPrint(net, 1000, true);
     }
     
     @Test
@@ -376,10 +379,36 @@ public class EvolutionaryJUnitTest {
         configuration.setDisconnectionMutationRate(0.0025f); 
         configuration.setConnectionMutationRate(0.0025f);
         
-        muteAndPrint(net);
+        muteAndPrint(net, 1000, true);
     }
     
-    private void muteAndPrint(PtpVectorNeuralNetwork net){
+    @Test
+    public void mutationTest3(){
+        PtpVectorNeuralNetwork netr;
+        PtpVectorNeuralNetworkMutationProcessor mutationProcessor;
+        PtpVectorNeuralNetwork net = createBaseNet();
+        
+        net.getNeuron(0).changeBias(0.1f);
+        net.getNeuron(0).getActivationFunction().changeLinearity(0.5f);
+        PtpVectorNeuralNetworkWeightDistributionInitializer.setWeight(0, 9, -0.3f, net);
+        
+        net.getNeuron(1).changeBias(0.2f);        
+        net.getNeuron(1).getActivationFunction().changeLinearity(2.0f);
+        PtpVectorNeuralNetworkWeightDistributionInitializer.setWeight(1, 9, 1.0f, net);
+        
+        net.getNeuron(9).changeBias(-0.50f);
+        configuration.setThresholdMutationRate(0.1f);
+        configuration.setMaxThresholdExchangeFactorValue(0.5f);
+        configuration.setWeightsMutationRate(0.05f);
+        configuration.setMaxWeightExchangevalue(0.5f);
+        configuration.setDisconnectionMutationRate(0.001f); 
+        configuration.setConnectionMutationRate(0.001f);
+        
+        muteAndPrint(net, 1000, true);
+    }
+    
+    private void muteAndPrint(PtpVectorNeuralNetwork net, int cycles, boolean printChangesOnly){
+        ChangesRegister totalChanges = new ChangesRegister();
         PtpVectorNeuralNetwork netrOld;
         PtpVectorNeuralNetwork netr;
         PtpVectorNeuralNetworkMutationProcessor mutationProcessor;
@@ -414,73 +443,377 @@ public class EvolutionaryJUnitTest {
         System.out.print("\t- Ratio de desaparició de connexions existents: ");
         System.out.println(configuration.getDisconnectionMutationRate());
         System.out.println();
-        System.out.println("\nParametres agent inicial:");
-        System.out.println(net.toString());
         System.out.println("-------------------------------------------\n");
+        totalChanges.inc(getAverageValues(net));
+        System.out.println("Valors mitjos de la xarxa:");
+        System.out.println(getAverageValuesReport(totalChanges, "- "));
+        System.out.println("-------------------------------------------\n");
+        if(!printChangesOnly){
+            System.out.println("\nParametres agent inicial:");
+            System.out.println(net.toString());
+            System.out.println("-------------------------------------------\n");
+        }
         netrOld = net;
-        for(int i=0; i<30; i++){
+        for(int i=0; i<cycles; i++){
             netr = mutationProcessor.muteFrom(netrOld);
             System.out.print("Cicle de mutació número: ");
             System.out.println(++nm);
-            System.out.println("Canvis constatats:");
-            System.out.println(getChangesReport(netrOld, netr));
-            System.out.println("-------------------------------------------\n");
-            System.out.println("\nParametres agent mutat");
-            System.out.println(netr.toString());
+            System.out.println("  Canvis constatats:");
+            ChangesRegister cycleChanges = getChanges(netrOld, netr);
+            totalChanges.inc(cycleChanges);
+            System.out.println(getChangesReport(cycleChanges, "  - "));
+            System.out.println("  Valors mitjos de la xarxa:");
+            System.out.println(getAverageValuesReport(cycleChanges, "  - "));
+            if(!printChangesOnly){
+                System.out.println("-------------------------------------------\n");
+                System.out.println("\nParametres agent mutat");
+                System.out.println(netr.toString());
+                System.out.println("-------------------------------------------\n");
+            }
             System.out.println("-------------------------------------------\n");
             netrOld = netr;
         }
+        System.out.println("-------------------------------------------\n");
+        totalChanges.setAcumBetaValues(totalChanges.getAcumBetaValues()/(cycles+1));
+        totalChanges.setAcumBiasValues(totalChanges.getAcumBiasValues()/(cycles+1));
+        totalChanges.setAcumWeightValues(totalChanges.getAcumWeightValues()/(cycles+1));
+        System.out.println("Resum dels valors promig totals en la mutació:");
+        System.out.println(getAverageValuesReport(totalChanges, "- "));
+        System.out.println("-------------------------------------------\n");
+        System.out.println("Resum dels canvis totals en la mutació:");
+        System.out.println(getChangesReport(totalChanges, "- "));
+        System.out.println("-------------------------------------------\n");
     }
     
-    private String getChangesReport(PtpVectorNeuralNetwork netrOld, PtpVectorNeuralNetwork netr){
-        int c;
-        StringBuilder strb = new StringBuilder();
-        strb.append("  - canvis en la funció d'activació (BETA): ");
-        c=0;
+    private ChangesRegister getAverageValues(PtpVectorNeuralNetwork netr){
+        ChangesRegister changesRegister = new ChangesRegister();
+        for(int i=0; i<netr.getMaxNeuronsLength(); i++){
+            changesRegister.incAcumBetaValues(((SigmoidActivationFunction)netr.getNeuron(i).getActivationFunction()).getBeta());
+            changesRegister.incAcumBiasValues(netr.getNeuron(i).getBias());
+        }
+        changesRegister.setAcumBetaValues(changesRegister.getAcumBetaValues()/netr.getMaxNeuronsLength());
+        changesRegister.setAcumBiasValues(changesRegister.getAcumBiasValues()/netr.getMaxNeuronsLength());
+        int noZero=0;
+        for(int i=0; i<netr.getConnections().length; i++){
+            for(int j=0; j<netr.getConnections()[0].length; j++){
+                if(netr.getConnections()[i][j]!=0){
+                    noZero++;
+                }
+                changesRegister.incAcumWeightValues(netr.getConnections()[i][j]);
+            }
+        }
+        changesRegister.setAcumWeightValues(changesRegister.getAcumWeightValues()/noZero);
+        return changesRegister;         
+    }
+    
+    private ChangesRegister getChanges(PtpVectorNeuralNetwork netrOld, PtpVectorNeuralNetwork netr){
+        ChangesRegister changesRegister = new ChangesRegister();
         for(int i=0; i<netrOld.getMaxNeuronsLength(); i++){
             if(((SigmoidActivationFunction)netrOld.getNeuron(i).getActivationFunction()).getBeta()
                     !=((SigmoidActivationFunction)netr.getNeuron(i).getActivationFunction()).getBeta()){
-                c++;
+                changesRegister.incBetaChanges(1);
             }
-        }
-        strb.append(c);
-        strb.append("\n");
-        strb.append("  - canvis en el paràmetre bias: ");
-        c=0;
-        for(int i=0; i<netrOld.getMaxNeuronsLength(); i++){
             if(!Objects.equals(netrOld.getNeuron(i).getBias(), netr.getNeuron(i).getBias())){
-                c++;
+                changesRegister.incBiasChanges(1);
             }
+            changesRegister.incAcumBetaValues(((SigmoidActivationFunction)netr.getNeuron(i).getActivationFunction()).getBeta());
+            changesRegister.incAcumBiasValues(netr.getNeuron(i).getBias());
         }
-        strb.append(c);
-        strb.append("\n");
-        strb.append("  - canvis en el pes de connexions existents: ");
-        c=0;
-        int n=0;
-        int e=0;
+        changesRegister.setAcumBetaValues(changesRegister.getAcumBetaValues()/netr.getMaxNeuronsLength());
+        changesRegister.setAcumBiasValues(changesRegister.getAcumBiasValues()/netr.getMaxNeuronsLength());
+
+        int noZero=0;
         for(int i=0; i<netrOld.getConnections().length; i++){
             for(int j=0; j<netrOld.getConnections()[0].length; j++){
                 if(netrOld.getConnections()[i][j]==0 && netr.getConnections()[i][j]!=0){
-                    n++;
+                    changesRegister.incNewConnections(1);
                 }
                 if(netrOld.getConnections()[i][j]!=0 && netr.getConnections()[i][j]==0){
-                    e++;
+                    changesRegister.incDeletedConnections(1);
                 }
                 if(netrOld.getConnections()[i][j]!=netr.getConnections()[i][j]){
-                    c++;
+                    changesRegister.incWeightChanges(1);
                 }
+                if(netr.getConnections()[i][j]!=0){
+                    noZero++;
+                }
+                changesRegister.incAcumWeightValues(netr.getConnections()[i][j]);
             }
         }
-        strb.append(c);
+        changesRegister.setAcumWeightValues(changesRegister.getAcumWeightValues()/noZero);
+        return changesRegister;        
+    }
+    
+    private String getAverageValuesReport(ChangesRegister changesRegister, String prefix){
+        StringBuilder strb = new StringBuilder();
+        strb.append(prefix);
+        strb.append("Valor promig en la funció d'activació (BETA): ");
+        strb.append(changesRegister.getAcumBetaValues());
         strb.append("\n");
-        strb.append("  - noves connexions establertes: ");
-        strb.append(n);
+        strb.append(prefix);
+        strb.append("Valor promig en el paràmetre bias: ");
+        strb.append(changesRegister.getAcumBiasValues());
         strb.append("\n");
-        strb.append("  - connexions eliminades: ");
-        strb.append(e);
+        strb.append(prefix);
+        strb.append("Valor promig en el pes de connexions existents: ");
+        strb.append(changesRegister.getAcumWeightValues());
+        strb.append("\n");
+        
+        return strb.toString();
+    }
+    
+    private String getChangesReport(ChangesRegister changesRegister, String prefix){
+        StringBuilder strb = new StringBuilder();
+        strb.append(prefix);
+        strb.append("canvis en la funció d'activació (BETA): ");
+        strb.append(changesRegister.countBetaChanges());
+        strb.append("\n");
+        strb.append(prefix);
+        strb.append("canvis en el paràmetre bias: ");
+        strb.append(changesRegister.countBiasChanges());
+        strb.append("\n");
+        strb.append(prefix);
+        strb.append("canvis en el pes de connexions existents: ");
+        strb.append(changesRegister.countWeightChanges());
+        strb.append("\n");
+        strb.append(prefix);
+        strb.append("noves connexions establertes: ");
+        strb.append(changesRegister.countNewConnections());
+        strb.append("\n");
+        strb.append(prefix);
+        strb.append("connexions eliminades: ");
+        strb.append(changesRegister.countDeletedConnections());
         strb.append("\n");
 
         return strb.toString();
     }
+    
+    private static class ChangesRegister{
+        protected int betaChanges=0;
+        protected int biasChanges=0;
+        protected int weightChanges=0;
+        protected int newConnections=0;
+        protected int deletedConnections=0;
+        protected double acumBetaValues=0;
+        protected double acumBiasValues=0;
+        protected double acumWeightValues=0;
+
+        public ChangesRegister() {
+        }
         
+        public ChangesRegister( int betaChanges, int biasChanges, int weightChanges, int newConnections, int deletedConnections) {
+            this.betaChanges = betaChanges;
+            this.biasChanges = biasChanges;
+            this.weightChanges = weightChanges;
+            this.newConnections = newConnections;
+            this.deletedConnections = deletedConnections;
+        }
+        
+        
+
+        /**
+         * @return the acumBetaValues
+         */
+        public int countBetaChanges() {
+            return (int) betaChanges;
+        }
+
+        /**
+         * @param betaChanges the acumBetaValues to set
+         */
+        public void setBetaChanges(int betaChanges) {
+            this.betaChanges = betaChanges;
+        }
+
+        /**
+         * @param betaChanges the acumBetaValues to increment
+         */
+        public void incBetaChanges(int betaChanges) {
+            this.betaChanges += betaChanges;
+        }
+
+        /**
+         * @return the acumBiasValues
+         */
+        public int countBiasChanges() {
+            return (int) biasChanges;
+        }
+
+        /**
+         * @param biasChanges the acumBiasValues to set
+         */
+        public void setBiasChanges(int biasChanges) {
+            this.biasChanges = biasChanges;
+        }
+
+        /**
+         * @param biasChanges the acumBiasValues to increment
+         */
+        public void incBiasChanges(int biasChanges) {
+            this.biasChanges += biasChanges;
+        }
+
+        /**
+         * @return the acumWeightValues
+         */
+        public int countWeightChanges() {
+            return (int) weightChanges;
+        }
+
+        /**
+         * @param weightChanges the acumWeightValues to set
+         */
+        public void setWeightChanges(int weightChanges) {
+            this.weightChanges = weightChanges;
+        }
+
+        /**
+         * @param weightChanges the acumWeightValues to increment
+         */
+        public void incWeightChanges(int weightChanges) {
+            this.weightChanges += weightChanges;
+        }
+
+        /**
+         * @return the newConnections
+         */
+        public int countNewConnections() {
+            return newConnections;
+        }
+
+        /**
+         * @param newConnections the newConnections to set
+         */
+        public void setNewConnections(int newConnections) {
+            this.newConnections = newConnections;
+        }
+
+        /**
+         * @param newConnections the newConnections to increment
+         */
+        public void incNewConnections(int newConnections) {
+            this.newConnections += newConnections;
+        }
+
+        /**
+         * @return the deletedConnections
+         */
+        public int countDeletedConnections() {
+            return deletedConnections;
+        }
+
+        /**
+         * @param deletedConnections the deletedConnections to set
+         */
+        public void setDeletedConnections(int deletedConnections) {
+            this.deletedConnections = deletedConnections;
+        }
+        
+        /**
+         * @return the newConnections
+         */
+        public int getNewConnections() {
+            return newConnections;
+        }
+
+        /**
+         * @return the deletedConnections
+         */
+        public int getDeletedConnections() {
+            return deletedConnections;
+        }
+
+        /**
+         * @param deletedConnections the deletedConnections to increment
+         */
+        public void incDeletedConnections(int deletedConnections) {
+            this.deletedConnections += deletedConnections;
+        }
+        
+        /**
+         * @return the acumBetaValues
+         */
+        public double getAcumBetaValues() {
+            return acumBetaValues;
+        }
+
+        /**
+         * @param acumBetaValues the acumBetaValues to set
+         */
+        public void setAcumBetaValues(double acumBetaValues) {
+            this.acumBetaValues = acumBetaValues;
+        }
+
+        /**
+         * @return the acumBiasValues
+         */
+        public double getAcumBiasValues() {
+            return acumBiasValues;
+        }
+
+        /**
+         * @param acumBiasValues the acumBiasValues to set
+         */
+        public void setAcumBiasValues(double acumBiasValues) {
+            this.acumBiasValues = acumBiasValues;
+        }
+
+        /**
+         * @return the acumWeightValues
+         */
+        public double getAcumWeightValues() {
+            return acumWeightValues;
+        }
+
+        /**
+         * @param acumWeightValues the acumWeightValues to set
+         */
+        public void setAcumWeightValues(double acumWeightValues) {
+            this.acumWeightValues = acumWeightValues;
+        }
+
+        /**
+         * @param betaChanges the acumBetaValues to increment
+         */
+        public void incAcumBetaValues(double betaChanges) {
+            this.acumBetaValues += betaChanges;
+        }
+
+        /**
+         * @param biasChanges the acumBiasValues to increment
+         */
+        public void incAcumBiasValues(double biasChanges) {
+            this.acumBiasValues += biasChanges;
+        }
+
+        /**
+         * @param weightChanges the acumWeightValues to increment
+         */
+        public void incAcumWeightValues(double weightChanges) {
+            this.acumWeightValues += weightChanges;
+        }
+        
+
+        public void set(ChangesRegister changesRegister){
+            this.betaChanges = changesRegister.betaChanges;
+            this.biasChanges = changesRegister.biasChanges;
+            this.weightChanges = changesRegister.weightChanges;
+            this.newConnections = changesRegister.newConnections;
+            this.deletedConnections = changesRegister.deletedConnections;            
+            this.acumBetaValues = changesRegister.acumBetaValues;
+            this.acumBiasValues = changesRegister.acumBiasValues;
+            this.acumWeightValues = changesRegister.acumWeightValues;
+        }
+
+        public void inc(ChangesRegister changesRegister){
+            this.betaChanges += changesRegister.betaChanges;
+            this.biasChanges += changesRegister.biasChanges;
+            this.weightChanges += changesRegister.weightChanges;
+            this.newConnections += changesRegister.newConnections;
+            this.deletedConnections += changesRegister.deletedConnections;            
+            this.acumBetaValues += changesRegister.acumBetaValues;
+            this.acumBiasValues += changesRegister.acumBiasValues;
+            this.acumWeightValues += changesRegister.acumWeightValues;
+        }
+    }        
 }

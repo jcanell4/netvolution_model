@@ -227,6 +227,14 @@ public class PtpSingleNeuron implements PtpNeuron {
         }
     }
 
+    public boolean isInputType(){
+        return ihoType=='i';
+    }
+    
+    public boolean isOutputType(){
+        return ihoType=='o';
+    }
+    
     /**
      * @param ihoType the ihoType to set
      */

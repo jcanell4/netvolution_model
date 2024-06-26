@@ -2,6 +2,7 @@ package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetwork;
 import org.elsquatrecaps.utilities.tools.ComparableArrayOf;
 
@@ -46,6 +47,6 @@ public class PtpNeuralNetworkTrueTablePerformaceCalculator implements PtpNeuralN
                 success++;
             }
         }
-        return BigDecimal.valueOf(success).divide(BigDecimal.valueOf(differentStimuli), MathContext.DECIMAL128);
+        return BigDecimal.valueOf(success).divide(BigDecimal.valueOf(differentStimuli), 10, RoundingMode.HALF_UP);
     }
 }

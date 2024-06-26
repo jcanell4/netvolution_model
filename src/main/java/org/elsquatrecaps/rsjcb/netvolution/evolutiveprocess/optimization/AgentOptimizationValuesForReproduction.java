@@ -11,30 +11,45 @@ public class AgentOptimizationValuesForReproduction implements Comparable<AgentO
     
     private int id;
     private BigDecimal performance;
+    private BigDecimal vitalAdvantage;
     private BigDecimal reprodutciveAdvantage;
     protected BigDecimal reproductionRate = BigDecimal.ZERO;
 
     public AgentOptimizationValuesForReproduction(int id) {
         this.id = id;
-        this.performance = BigDecimal.ZERO;
+        this.vitalAdvantage = BigDecimal.ZERO;
         this.reprodutciveAdvantage = BigDecimal.ZERO;
     }
 
     public AgentOptimizationValuesForReproduction(int id, BigDecimal[] performanceAndReprodutciveAdvantage) {
         this.id = id;
-        this.performance = performanceAndReprodutciveAdvantage[0];
-        this.reprodutciveAdvantage = performanceAndReprodutciveAdvantage[1];
+        if(performanceAndReprodutciveAdvantage.length==3){
+            this.performance = performanceAndReprodutciveAdvantage[0];
+            this.vitalAdvantage = performanceAndReprodutciveAdvantage[1];
+            this.reprodutciveAdvantage = performanceAndReprodutciveAdvantage[2];
+        }else{
+            this.performance = this.vitalAdvantage = performanceAndReprodutciveAdvantage[0];
+            this.reprodutciveAdvantage = performanceAndReprodutciveAdvantage[1];
+        }
     }
 
-    public AgentOptimizationValuesForReproduction(int id, BigDecimal performance, BigDecimal reprodutciveAdvantage) {
+    public AgentOptimizationValuesForReproduction(int id, BigDecimal vitalAdvantage, BigDecimal reprodutciveAdvantage) {
+        this.id = id;
+        this.performance = this.vitalAdvantage = vitalAdvantage;
+        this.reprodutciveAdvantage = reprodutciveAdvantage;
+    }
+
+    public AgentOptimizationValuesForReproduction(int id, BigDecimal performance, BigDecimal vitalAdvantage, BigDecimal reprodutciveAdvantage) {
         this.id = id;
         this.performance = performance;
+        this.vitalAdvantage = vitalAdvantage;
         this.reprodutciveAdvantage = reprodutciveAdvantage;
     }
 
     public AgentOptimizationValuesForReproduction(int id, PtpNeuralNetworkTrueTableGlobalCalculator.PerformaceAndReproductiveAdvantage pra) {
         this.id = id;
-        this.performance = pra.getPerformace();
+        this.performance = pra.getPerformance();
+        this.vitalAdvantage = pra.getVitalAdvantage();
         this.reprodutciveAdvantage = pra.getReproductiveAdvantage(true);
     }
 
@@ -49,7 +64,7 @@ public class AgentOptimizationValuesForReproduction implements Comparable<AgentO
     }
 
     public BigDecimal getReporductiveAdvantageValue() {
-        return performance.add(reprodutciveAdvantage);
+        return vitalAdvantage.add(reprodutciveAdvantage);
     }
 
     @Override
@@ -57,8 +72,8 @@ public class AgentOptimizationValuesForReproduction implements Comparable<AgentO
         return getReporductiveAdvantageValue().compareTo(t.getReporductiveAdvantageValue());
     }
 
-    public BigDecimal getPerformance() {
-        return performance;
+    public BigDecimal getVitalAdvantage() {
+        return vitalAdvantage;
     }
 
     /**
@@ -81,5 +96,11 @@ public class AgentOptimizationValuesForReproduction implements Comparable<AgentO
     public BigDecimal getReproductionRate() {
         return reproductionRate;
     }
-    
+
+    /**
+     * @return the performance
+     */
+    public BigDecimal getPerformance() {
+        return performance;
+    }
 }

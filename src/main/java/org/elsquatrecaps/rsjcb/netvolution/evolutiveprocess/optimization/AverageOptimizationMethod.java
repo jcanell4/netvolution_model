@@ -6,10 +6,10 @@ package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.SinglePropertyCalculatorInfo;
 
 /**
  *
@@ -22,35 +22,35 @@ public class AverageOptimizationMethod extends OptimizationMethod{
     public DataToEvaluateOptimization getDataToEvaluateOptimization(AgentOptimizationValuesForReproduction[] evolutiveValues){
         int posMinPerformace=0;
         int posMaxPerformace=0;
+        int worstCounter=0;
         BigDecimal sumRepAdv=BigDecimal.ZERO;
         Arrays.sort(evolutiveValues);
         List<AgentOptimizationValuesForReproduction> bestAgents = new ArrayList<>();
         for(int i=0; i<evolutiveValues.length; i++){
-            if(evolutiveValues[i].getPerformance().compareTo(this.getAveragePerformance())>=0){
+            if(evolutiveValues[i].getVitalAdvantage().compareTo(this.getAveragePerformance())>0){
                 bestAgents.add(evolutiveValues[i]);
+            }else if(evolutiveValues[i].getVitalAdvantage().compareTo(this.getAveragePerformance())==0){
+                bestAgents.add(evolutiveValues[i]);
+                worstCounter++;
+            }else{
+                worstCounter++;
             }
-            if(evolutiveValues[i].getPerformance().compareTo(evolutiveValues[posMinPerformace].getPerformance())<0){
+            if(evolutiveValues[i].getVitalAdvantage().compareTo(evolutiveValues[posMinPerformace].getVitalAdvantage())<0){
                 posMinPerformace=i;
             }
-            if(evolutiveValues[i].getPerformance().compareTo(evolutiveValues[posMaxPerformace].getPerformance())>0){
+            if(evolutiveValues[i].getVitalAdvantage().compareTo(evolutiveValues[posMaxPerformace].getVitalAdvantage())>0){
                 posMaxPerformace=i;
             }
         }
-        for(int i=0; i<bestAgents.size(); i++){
+        BigDecimal perOne = BigDecimal.valueOf(1.0/bestAgents.size());
+        for(int i=1; i<bestAgents.size(); i++){
             BigDecimal ra = bestAgents.get(i).getReporductiveAdvantageValue().subtract(bestAgents.get(0).getReporductiveAdvantageValue());
-            sumRepAdv = sumRepAdv.add(ra);
+            sumRepAdv = sumRepAdv.add(ra.add(perOne));
+            bestAgents.get(i).reproductionRate = sumRepAdv;
         }
         for(int i=1; i<bestAgents.size(); i++){
-            //bestAgents.get(i).reproductionRate = bestAgents.get(i-1).reproductionRate + 
-                //(bestAgents.get(i).getReporductiveAdvantageValue()-bestAgents.get(0).getReporductiveAdvantageValue())/sumRepAdv;
-            BigDecimal dif = bestAgents.get(i).getReporductiveAdvantageValue().subtract(bestAgents.get(0).getReporductiveAdvantageValue());
-            if(dif.compareTo(BigDecimal.ZERO)==0){
-                bestAgents.get(i).reproductionRate = bestAgents.get(i-1).getReproductionRate();
-            }else{
-                bestAgents.get(i).reproductionRate = 
-                        bestAgents.get(i-1).getReproductionRate().add(dif.divide(sumRepAdv,MathContext.DECIMAL128));
-            }
+            bestAgents.get(i).reproductionRate = bestAgents.get(i).reproductionRate.divide(sumRepAdv, 30, RoundingMode.HALF_UP);
         }
-        return new DataToEvaluateOptimization(posMinPerformace, posMaxPerformace, bestAgents);
+        return new DataToEvaluateOptimization(posMinPerformace, posMaxPerformace, bestAgents, worstCounter);
     }    
 }

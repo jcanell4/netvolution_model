@@ -37,6 +37,10 @@ public interface PtpNeuron extends Cloneable, Serializable{
     
     void setIhoType(char ihoType);
     
+    boolean isInputType();
+
+    boolean isOutputType();
+    
     UpdateStatusValues getUpdateStatus();
     
     void setUpdateStatus(UpdateStatusValues v);

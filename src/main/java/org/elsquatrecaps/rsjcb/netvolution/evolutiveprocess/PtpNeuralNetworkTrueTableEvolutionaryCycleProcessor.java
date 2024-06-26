@@ -8,6 +8,7 @@ import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.AgentOp
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.SurviveOptimizationMethodValues;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.PtpNeuralNetworkTrueTableGlobalCalculator;
 import java.util.HashMap;
 import java.util.List;
@@ -85,13 +86,22 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
         Map<String, Float> extraData = new HashMap<>();
                 
 //        Float sumRepAdv=0f;
+        BigDecimal sumVitalAdv=BigDecimal.ZERO;
         BigDecimal sumPerf=BigDecimal.ZERO;
+        BigDecimal minPerf=BigDecimal.valueOf(Long.MAX_VALUE);
+        BigDecimal maxPerf=BigDecimal.valueOf(Long.MIN_VALUE);
         AgentOptimizationValuesForReproduction[] positiveResults = new AgentOptimizationValuesForReproduction[population.length];
         for(int p=0; p<population.length; p++){
             PtpNeuralNetwork agent = population[p];
             positiveResults[p]=new AgentOptimizationValuesForReproduction(p, performanceCalculator.calculate(agent));
+            sumVitalAdv = sumVitalAdv.add(positiveResults[p].getVitalAdvantage());
             sumPerf = sumPerf.add(positiveResults[p].getPerformance());
-//            sumPerf += positiveResults[p].getPerformance();
+            if(minPerf.compareTo(positiveResults[p].getPerformance())>0){
+                minPerf= positiveResults[p].getPerformance();
+            }
+            if(maxPerf.compareTo(positiveResults[p].getPerformance())<0){
+                maxPerf = positiveResults[p].getPerformance();
+            }
             propertiesToReport.forEach((String k, PtpNeuralNetworkSinglePropertyCalculator c) -> {                
                 Float f = extraData.get(k);
                 if(f==null){
@@ -101,61 +111,31 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
                 extraData.put(k, (float) f);
             });
         }
-        BigDecimal perf = sumPerf.divide(new BigDecimal(population.length), MathContext.DECIMAL128);
-        EvolutionaryCycleInfo ret = renewPopulation(positiveResults, perf/*, repAdv*/);        
-
+        BigDecimal vitalAdv = sumVitalAdv.divide(new BigDecimal(population.length), 10, RoundingMode.HALF_UP);
+        BigDecimal perf = sumPerf.divide(new BigDecimal(population.length), 5, RoundingMode.HALF_UP);
+        EvolutionaryCycleInfo ret = renewPopulation(positiveResults, vitalAdv);   
+        ret.setAvgPerformance(perf.doubleValue());
+        ret.setMaxPerformance(maxPerf.doubleValue());
+        ret.setMinPerformance(minPerf.doubleValue());
         extraData.forEach((String k, Float u) -> {
             ret.setExtraInfo(k, u/population.length);
         });
         return ret;
     }
     
-    private EvolutionaryCycleInfo renewPopulation(AgentOptimizationValuesForReproduction[] evolutiveValues, BigDecimal averagePerformance) {
+    private EvolutionaryCycleInfo renewPopulation(AgentOptimizationValuesForReproduction[] evolutiveValues, BigDecimal averageVitalAdv) {
         EvolutionaryCycleInfo ret;
         int toKill;
         int killed= 0;
         OptimizeMethodItems factory = OptimizeMethodItems.getItem(surviveOptimizationMethod.getValue());
         OptimizationMethod om = factory.getInstance();
-        om.init(averagePerformance);
+        om.init(averageVitalAdv);
         DataToEvaluateOptimization dataToEvaluateOptimization = om.getDataToEvaluateOptimization(evolutiveValues);
         List<AgentOptimizationValuesForReproduction> bestAgents = dataToEvaluateOptimization.getBestAgents();
-        
-       
-//        BigDecimal sumRepAdv=BigDecimal.ZERO;
-//        int posMinPerformace=0;
-//        int posMaxPerformace=0;
 
-//        Arrays.sort(evolutiveValues);
-//        List<AgentOptimizationValuesForReproduction> bestAgents = new ArrayList<>();
-//        for(int i=0; i<evolutiveValues.length; i++){
-//            if(evolutiveValues[i].getPerformance().compareTo(averagePerformance)>=0){
-//                bestAgents.add(evolutiveValues[i]);
-//            }
-//            if(evolutiveValues[i].getPerformance().compareTo(evolutiveValues[posMinPerformace].getPerformance())<0){
-//                posMinPerformace=i;
-//            }
-//            if(evolutiveValues[i].getPerformance().compareTo(evolutiveValues[posMaxPerformace].getPerformance())>0){
-//                posMaxPerformace=i;
-//            }
-//        }
-//        for(int i=0; i<bestAgents.size(); i++){
-//            BigDecimal ra = bestAgents.get(i).getReporductiveAdvantageValue().subtract(bestAgents.get(0).getReporductiveAdvantageValue());
-//            sumRepAdv = sumRepAdv.add(ra);
-//        }
-//        for(int i=1; i<bestAgents.size(); i++){
-//            //bestAgents.get(i).reproductionRate = bestAgents.get(i-1).reproductionRate + 
-//                //(bestAgents.get(i).getReporductiveAdvantageValue()-bestAgents.get(0).getReporductiveAdvantageValue())/sumRepAdv;
-//            BigDecimal dif = bestAgents.get(i).getReporductiveAdvantageValue().subtract(bestAgents.get(0).getReporductiveAdvantageValue());
-//            if(dif.compareTo(BigDecimal.ZERO)==0){
-//                bestAgents.get(i).reproductionRate = bestAgents.get(i-1).reproductionRate;
-//            }else{
-//                bestAgents.get(i).reproductionRate = 
-//                        bestAgents.get(i-1).reproductionRate.add(dif.divide(sumRepAdv,MathContext.DECIMAL128));
-//            }
-//        }
-        toKill = Math.min(bestAgents.size(), Math.max(1,(int) (evolutiveValues.length*(1 - this.survivalRateForOptimizationMethod))));
+        toKill = Math.min(dataToEvaluateOptimization.getWorstAgentCounter(), Math.max(1,(int) (evolutiveValues.length*(1 - this.survivalRateForOptimizationMethod))));
         for(int i=0; killed < toKill && i<evolutiveValues.length; i++){
-            if(evolutiveValues[i].getPerformance().compareTo(averagePerformance)<=0){
+            if(evolutiveValues[i].getVitalAdvantage().compareTo(averageVitalAdv)<=0){
                 killed++;
                 int pos = selectBetterPosFromRandom(bestAgents, 0);
                 PtpNeuralNetwork mutated = mutationProcessor.muteFrom(population[pos]);
@@ -165,56 +145,13 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
                 population[evolutiveValues[i].getId()] = mutated;
             }
         }
-        ret = new EvolutionaryCycleInfo(killed, averagePerformance.doubleValue(), 
-                evolutiveValues[dataToEvaluateOptimization.getPosMaxPerformace()].getPerformance().doubleValue(), 
-                evolutiveValues[dataToEvaluateOptimization.getPosMinPerformace()].getPerformance().doubleValue(),
+        ret = new EvolutionaryCycleInfo(killed, averageVitalAdv.doubleValue(), 
+                evolutiveValues[dataToEvaluateOptimization.getPosMaxPerformace()].getVitalAdvantage().doubleValue(), //[TODO: REVISAR AIXÒ S'ordena per vitalAdvantage i potser no és el maxim perfrmance]
+                evolutiveValues[dataToEvaluateOptimization.getPosMinPerformace()].getVitalAdvantage().doubleValue(),//[TODO: REVISAR AIXÒ S'ordena per vitalAdvantage i potser no és el mínim perfrmance]
                 population[evolutiveValues[dataToEvaluateOptimization.getPosMaxPerformace()].getId()], 
                 population[evolutiveValues[dataToEvaluateOptimization.getPosMinPerformace()].getId()]);
         return ret;
     }
-    
-//    private EvolutionaryCycleInfo renewPopulation(IdAndPerformanceOfAgent[] evolutiveValues, Float averagePerformance) {
-//        EvolutionaryCycleInfo ret;
-//        int killed= 0;
-//        float sum=0;
-//        int posMinPerformace=0;
-//        int posMaxPerformace=0;
-//        List<IdAndPerformanceOfAgent> positiveResults = new ArrayList<>();         
-//        for(int i=0; i<evolutiveValues.length; i++){
-//            if(evolutiveValues[i].performance>=averagePerformance){
-//                positiveResults.add(evolutiveValues[i]);
-//                for(int p=positiveResults.size()-1; p>0 && positiveResults.get(p).compareTo(positiveResults.get(p-1))<0; p--){
-//                    IdAndPerformanceOfAgent aux = positiveResults.get(p-1);
-//                    positiveResults.set(p-1, positiveResults.get(p));
-//                    positiveResults.set(p, aux);
-//                }
-//            }
-//            if(evolutiveValues[i].performance<evolutiveValues[posMinPerformace].performance){
-//                posMinPerformace=i;
-//            }
-//            if(evolutiveValues[i].performance>evolutiveValues[posMaxPerformace].performance){
-//                posMaxPerformace=i;
-//            }
-//        }
-//        for(int i=0; i<positiveResults.size(); i++){
-//            float ra = positiveResults.get(i).reprodutciveAdvantage-positiveResults.get(0).reprodutciveAdvantage;
-//            sum+=ra;
-//        }
-//        for(int i=1; i<positiveResults.size(); i++){
-//            positiveResults.get(i).reproductionRate = positiveResults.get(i-1).reproductionRate + (positiveResults.get(i).reprodutciveAdvantage-positiveResults.get(0).reprodutciveAdvantage)/sum;
-//        }
-//        for(int i=0; i<evolutiveValues.length; i++){
-//            if(evolutiveValues[i].performance<=averagePerformance){
-//                killed++;
-//                int pos = selectBetterPosFromRandom(positiveResults, 0);
-//                population[evolutiveValues[i].id] = mutationProcessor.muteFrom(population[pos]);
-//            }
-//        }
-//        ret = new EvolutionaryCycleInfo(killed, averagePerformance, 
-//                evolutiveValues[posMaxPerformace].performance, evolutiveValues[posMinPerformace].performance,
-//                population[evolutiveValues[posMaxPerformace].id], population[evolutiveValues[posMinPerformace].id]);
-//        return ret;
-//    }
     
     private int selectBetterPosFromRandom(List<AgentOptimizationValuesForReproduction> positiveResults, int fromPos){
         int pos=positiveResults.size()-1;

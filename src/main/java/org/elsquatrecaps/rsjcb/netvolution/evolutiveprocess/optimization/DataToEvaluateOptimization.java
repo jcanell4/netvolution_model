@@ -14,12 +14,14 @@ public class DataToEvaluateOptimization {
     
     private int posMinPerformace;
     private int posMaxPerformace;
+    protected int worstAgentCounter;
     private List<AgentOptimizationValuesForReproduction> bestAgents;
 
-    public DataToEvaluateOptimization(int posMinPerformace, int posMaxPerformace, List<AgentOptimizationValuesForReproduction> bestAgents) {
+    public DataToEvaluateOptimization(int posMinPerformace, int posMaxPerformace, List<AgentOptimizationValuesForReproduction> bestAgents, int worstAgentCounter) {
         this.posMinPerformace = posMinPerformace;
         this.posMaxPerformace = posMaxPerformace;
         this.bestAgents = bestAgents;
+        this.worstAgentCounter = worstAgentCounter;
     }
 
     /**
@@ -41,6 +43,13 @@ public class DataToEvaluateOptimization {
      */
     public List<AgentOptimizationValuesForReproduction> getBestAgents() {
         return bestAgents;
+    }
+
+    /**
+     * @return the worstAgentsCounter
+     */
+    public int getWorstAgentCounter() {
+        return worstAgentCounter;
     }
     
 }

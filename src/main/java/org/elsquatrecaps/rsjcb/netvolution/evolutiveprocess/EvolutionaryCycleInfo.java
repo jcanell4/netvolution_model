@@ -17,9 +17,9 @@ import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetwork;
 public class EvolutionaryCycleInfo implements Serializable{
     private static final long serialVersionUID = 2478541542732890009L;        
     private final int replacedAgents;
-    private final double avgPerformance;
-    private final double maxPerformance;
-    private final double minPerformance;
+    private double avgPerformance;
+    private double maxPerformance;
+    private double minPerformance;
     private final PtpNeuralNetwork bestAgent;
     private final PtpNeuralNetwork worstAgent;
     final private Map<String, Double> extraInfo= new HashMap<>();
@@ -94,6 +94,27 @@ public class EvolutionaryCycleInfo implements Serializable{
      */
     public PtpNeuralNetwork getWorstAgent() {
         return worstAgent;
+    }
+
+    /**
+     * @param avgPerformance the avgPerformance to set
+     */
+    protected void setAvgPerformance(double avgPerformance) {
+        this.avgPerformance = avgPerformance;
+    }
+
+    /**
+     * @param maxPerformance the maxPerformance to set
+     */
+    protected void setMaxPerformance(double maxPerformance) {
+        this.maxPerformance = maxPerformance;
+    }
+
+    /**
+     * @param minPerformance the minPerformance to set
+     */
+    protected void setMinPerformance(double minPerformance) {
+        this.minPerformance = minPerformance;
     }
     
 }
