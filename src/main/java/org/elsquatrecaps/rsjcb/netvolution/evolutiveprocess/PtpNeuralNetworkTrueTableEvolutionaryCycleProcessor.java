@@ -7,7 +7,6 @@ package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.AgentOptimizationValuesForReproduction;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.SurviveOptimizationMethodValues;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.PtpNeuralNetworkTrueTableGlobalCalculator;
 import java.util.HashMap;
@@ -16,6 +15,7 @@ import java.util.Map;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.PtpNeuralNetworkSinglePropertyCalculator;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.SinglePropertyCalculatorItems;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.lineage.ParentLine;
+import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.AverageInizializationForOptimizationMethod;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.DataToEvaluateOptimization;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizationMethod;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizeMethodItems;
@@ -33,8 +33,10 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
     private PtpNeuralNetworkTrueTableGlobalCalculator performanceCalculator;
     private final PtpNeuralNetworkMutationProcessor mutationProcessor;
     private Map<String, PtpNeuralNetworkSinglePropertyCalculator> propertiesToReport = new HashMap<>();
-    private SurviveOptimizationMethodValues surviveOptimizationMethod;
+    private OptimizationMethod optimizationMethod;
+//    private SurviveOptimizationMethodValues surviveOptimizationMethod;
     private double survivalRateForOptimizationMethod=0.5;
+//    private double maxSurvivalRateForOptimizationMethod=1.0;
     boolean keepProgenyLines;
 
 
@@ -44,9 +46,10 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
             PtpNeuralNetworkTrueTableGlobalCalculator performanceCalculator, 
             PtpNeuralNetworkMutationProcessor mutationProcessor, 
             List<String> propertiesToFollow,
-            SurviveOptimizationMethodValues surviveOptimizationMethod, 
+            OptimizationMethod optimizationMethod,
+//            SurviveOptimizationMethodValues surviveOptimizationMethod, 
             boolean keepProgenyLines) {
-        this(population, performanceCalculator, mutationProcessor, propertiesToFollow, surviveOptimizationMethod, 0.5, keepProgenyLines);
+        this(population, performanceCalculator, mutationProcessor, propertiesToFollow, optimizationMethod, 0.1, keepProgenyLines);
     }
     
     public PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor(
@@ -54,15 +57,19 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
             PtpNeuralNetworkTrueTableGlobalCalculator performanceCalculator, 
             PtpNeuralNetworkMutationProcessor mutationProcessor, 
             List<String> propertiesToFollow,
-            SurviveOptimizationMethodValues surviveOptimizationMethod, 
+            OptimizationMethod optimizationMethod,
+//            SurviveOptimizationMethodValues surviveOptimizationMethod, 
             double survivalRate,
+//            double maxSurvivalRate,
             boolean keepProgenyLines) {
         SinglePropertyCalculatorItems item;
         this.population = population;
         this.performanceCalculator = performanceCalculator;
         this.mutationProcessor = mutationProcessor;
-        this.surviveOptimizationMethod = surviveOptimizationMethod;
+        this.optimizationMethod = optimizationMethod;
+//        this.surviveOptimizationMethod = surviveOptimizationMethod;
         this.survivalRateForOptimizationMethod = survivalRate;
+//        this.maxSurvivalRateForOptimizationMethod = maxSurvivalRate;
         this.keepProgenyLines = keepProgenyLines;
         if(keepProgenyLines){
             progenyLines = new ParentLine[population.length];
@@ -113,7 +120,7 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
         }
         BigDecimal vitalAdv = sumVitalAdv.divide(new BigDecimal(population.length), 10, RoundingMode.HALF_UP);
         BigDecimal perf = sumPerf.divide(new BigDecimal(population.length), 5, RoundingMode.HALF_UP);
-        EvolutionaryCycleInfo ret = renewPopulation(positiveResults, vitalAdv);   
+        EvolutionaryCycleInfo ret = renewPopulation(positiveResults, new AverageInizializationForOptimizationMethod(vitalAdv));   
         ret.setAvgPerformance(perf.doubleValue());
         ret.setMaxPerformance(maxPerf.doubleValue());
         ret.setMinPerformance(minPerf.doubleValue());
@@ -123,19 +130,21 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
         return ret;
     }
     
-    private EvolutionaryCycleInfo renewPopulation(AgentOptimizationValuesForReproduction[] evolutiveValues, BigDecimal averageVitalAdv) {
+    private EvolutionaryCycleInfo renewPopulation(
+            AgentOptimizationValuesForReproduction[] evolutiveValues
+            , AverageInizializationForOptimizationMethod averageVitalAdv) {
         EvolutionaryCycleInfo ret;
         int toKill;
         int killed= 0;
-        OptimizeMethodItems factory = OptimizeMethodItems.getItem(surviveOptimizationMethod.getValue());
-        OptimizationMethod om = factory.getInstance();
-        om.init(averageVitalAdv);
-        DataToEvaluateOptimization dataToEvaluateOptimization = om.getDataToEvaluateOptimization(evolutiveValues);
-        List<AgentOptimizationValuesForReproduction> bestAgents = dataToEvaluateOptimization.getBestAgents();
+//        OptimizeMethodItems factory = OptimizeMethodItems.getItem(surviveOptimizationMethod.getValue());
+//        OptimizationMethod om = factory.getInstance();
+        optimizationMethod.initProcess(averageVitalAdv);
+        optimizationMethod.updateDataToEvaluateOptimization(evolutiveValues);
+        List<AgentOptimizationValuesForReproduction> bestAgents = optimizationMethod.getBestAgents();
 
-        toKill = Math.min(dataToEvaluateOptimization.getWorstAgentCounter(), Math.max(1,(int) (evolutiveValues.length*(1 - this.survivalRateForOptimizationMethod))));
+        toKill = Math.min(optimizationMethod.getWorstAgentCounter(), Math.max(1,(int) (evolutiveValues.length*(1 - this.survivalRateForOptimizationMethod))));
         for(int i=0; killed < toKill && i<evolutiveValues.length; i++){
-            if(evolutiveValues[i].getVitalAdvantage().compareTo(averageVitalAdv)<=0){
+            if(optimizationMethod.mustDeath(i)){
                 killed++;
                 int pos = selectBetterPosFromRandom(bestAgents, 0);
                 PtpNeuralNetwork mutated = mutationProcessor.muteFrom(population[pos]);
@@ -145,11 +154,11 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
                 population[evolutiveValues[i].getId()] = mutated;
             }
         }
-        ret = new EvolutionaryCycleInfo(killed, averageVitalAdv.doubleValue(), 
-                evolutiveValues[dataToEvaluateOptimization.getPosMaxPerformace()].getVitalAdvantage().doubleValue(), //[TODO: REVISAR AIXÒ S'ordena per vitalAdvantage i potser no és el maxim perfrmance]
-                evolutiveValues[dataToEvaluateOptimization.getPosMinPerformace()].getVitalAdvantage().doubleValue(),//[TODO: REVISAR AIXÒ S'ordena per vitalAdvantage i potser no és el mínim perfrmance]
-                population[evolutiveValues[dataToEvaluateOptimization.getPosMaxPerformace()].getId()], 
-                population[evolutiveValues[dataToEvaluateOptimization.getPosMinPerformace()].getId()]);
+        ret = new EvolutionaryCycleInfo(killed, averageVitalAdv.getAveragePerformance().doubleValue(), 
+                evolutiveValues[optimizationMethod.getPosMaxPerformace()].getVitalAdvantage().doubleValue(), //[TODO: REVISAR AIXÒ S'ordena per vitalAdvantage i potser no és el maxim perfrmance]
+                evolutiveValues[optimizationMethod.getPosMinPerformace()].getVitalAdvantage().doubleValue(),//[TODO: REVISAR AIXÒ S'ordena per vitalAdvantage i potser no és el mínim perfrmance]
+                population[evolutiveValues[optimizationMethod.getPosMaxPerformace()].getId()], 
+                population[evolutiveValues[optimizationMethod.getPosMinPerformace()].getId()]);
         return ret;
     }
     

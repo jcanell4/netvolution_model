@@ -14,6 +14,7 @@ import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryProcessObserver;
 import org.elsquatrecaps.rsjcb.netvolution.events.FinishedEvolutionaryCycleEvent;
 import org.elsquatrecaps.rsjcb.netvolution.events.InitialEvolutionaryProcessEvent;
 import org.elsquatrecaps.rsjcb.netvolution.events.ProgenyLinesEvent;
+import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizationMethod;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetwork;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetworkMutationProcessor;
 import org.elsquatrecaps.utilities.concurrence.Monitor;
@@ -40,8 +41,10 @@ public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
             PtpNeuralNetworkTrueTableGlobalCalculator performanceCalculator, 
             PtpNeuralNetworkMutationProcessor mutationProcessor, 
             List<String> propertiesToFollow, 
-            SurviveOptimizationMethodValues surviveOptimizationMethodValues, 
+            OptimizationMethod optimizationMethod,
+//            SurviveOptimizationMethodValues surviveOptimizationMethodValues, 
             double survivalRate,
+//            double maxSurvivalRate,
             boolean keepProgenyLines
     ) {
 //       SinglePropertyCalculatorItems item;
@@ -53,8 +56,10 @@ public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
                performanceCalculator, 
                mutationProcessor, 
                propertiesToFollow,
-               surviveOptimizationMethodValues,
+               optimizationMethod,
+//               surviveOptimizationMethodValues,
                survivalRate,
+//               maxSurvivalRate,
                keepProgenyLines
        );
     }
@@ -127,24 +132,33 @@ public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
     public void process() {
         //F1
         int reason;
+        int times=0;
         endProcess = false;
         endedProcess.setValue(false);
-        boolean exit = false;
+        boolean goal_achieved = false;
         getObserver().updateEvent(new InitialEvolutionaryProcessEvent(
                     getAveragePerformanceForStopping(), 
                             getDesiredPerformance(), 
                                     getMaxTimes(), 
                              clonePopulation()));
-        for (int t = 0; !endProcess && !exit && t < getMaxTimes(); t++) {
+        for (times = 0; !endProcess && !goal_achieved && times < getMaxTimes(); times++) {
             stopProcessEvaluation();
             EvolutionaryCycleInfo info = getCycleProcessor().evaluateAndRenewPopulation();
-            exit = info.getAvgPerformance()>=getAveragePerformanceForStopping() && info.getMaxPerformance()>=getDesiredPerformance();
-            getObserver().updateEvent(new FinishedEvolutionaryCycleEvent(t, info));
+            goal_achieved = info.getAvgPerformance()>=getAveragePerformanceForStopping() && info.getMaxPerformance()>=getDesiredPerformance();
+            getObserver().updateEvent(new FinishedEvolutionaryCycleEvent(times, info));
+        }
+        if(goal_achieved){
+            int extraCycles = (int) (times + Math.min(1000, times*0.1));
+            for(;times<extraCycles; times++){
+                stopProcessEvaluation();
+                EvolutionaryCycleInfo info = getCycleProcessor().evaluateAndRenewPopulation();
+                getObserver().updateEvent(new FinishedEvolutionaryCycleEvent(times, info));
+            }
         }
         if(getCycleProcessor().getProgenyLines()!=null){
             getObserver().updateEvent(new ProgenyLinesEvent(getCycleProcessor().getProgenyLines()));
         }
-        if(exit){
+        if(goal_achieved){
             reason=CompletedEvolutionaryProcessEvent.GOAL_ACHIEVED_BY_EVOLUTION;
         }else if(endProcess){
             reason = CompletedEvolutionaryProcessEvent.PROCESS_CANCELED_BY_USER;

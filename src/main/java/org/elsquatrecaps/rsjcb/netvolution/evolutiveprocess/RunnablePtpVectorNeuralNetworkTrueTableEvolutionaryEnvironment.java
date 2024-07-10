@@ -3,7 +3,6 @@ package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.SurviveOptimizationMethodValues;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.PtpNeuralNetworkTrueTableGlobalCalculator;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import org.elsquatrecaps.rsjcb.netvolution.events.ErrorOnProcessEvolution;
@@ -11,6 +10,7 @@ import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryEvent;
 import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryProcesSubscriptor;
 import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryProcessEventStore;
 import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryProcessInfoEditor;
+import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizationMethod;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpVectorNeuralNetwork;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetworkConfiguration;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpVectorNeuralNetworkMutationProcessor;
@@ -42,8 +42,9 @@ public class RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment exte
             Float[][] environmentInputSet, 
             Float[][] environmentOutputSet, 
             List<String> performance, List<String> repAdv, List<String> propertiesToFollow, 
-            SurviveOptimizationMethodValues deathRateType, 
-            double deathRate,
+            OptimizationMethod optimizationMethod,
+//            SurviveOptimizationMethodValues deathRateType, 
+            double survivalRate,
             boolean keepProgenyLines) {
         super(new PtpVectorNeuralNetwork[populationSize], 
                 new PtpNeuralNetworkTrueTableGlobalCalculator(
@@ -53,8 +54,9 @@ public class RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment exte
                         environmentOutputSet), 
                 new PtpVectorNeuralNetworkMutationProcessor(), 
                 propertiesToFollow,
-                deathRateType,
-                deathRate,
+                optimizationMethod,
+//                deathRateType,
+                survivalRate,
                 keepProgenyLines);
         for(int i=0; i<populationSize; i++){
             PtpVectorNeuralNetwork net = new PtpVectorNeuralNetwork();

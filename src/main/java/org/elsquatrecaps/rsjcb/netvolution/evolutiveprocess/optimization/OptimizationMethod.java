@@ -4,24 +4,59 @@
  */
 package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization;
 
-import java.math.BigDecimal;
+import java.util.List;
 
 /**
  *
  * @author josep
  */
 public abstract class OptimizationMethod {
-    private BigDecimal averagePerformance;
+    private AverageInizializationForOptimizationMethod averageValues;
+    protected AgentOptimizationValuesForReproduction[] evolutiveValues;
+    protected DataToEvaluateOptimization dataToEvaluateOptimization;
     
-    public abstract DataToEvaluateOptimization getDataToEvaluateOptimization(AgentOptimizationValuesForReproduction[] evolutiveValues);
-    public void init(BigDecimal v){
-        this.averagePerformance = v;
+    public void updateDataToEvaluateOptimization(AgentOptimizationValuesForReproduction[] evolutiveValues){
+        this.evolutiveValues = evolutiveValues;
+        dataToEvaluateOptimization = getDataToEvaluateOptimization(this.evolutiveValues);
+    }
+    protected abstract DataToEvaluateOptimization getDataToEvaluateOptimization(AgentOptimizationValuesForReproduction[] evolutiveValues);
+    public void initInstance(Object... v){}
+    public void initProcess(AverageInizializationForOptimizationMethod v){
+        this.averageValues = v;
+    }
+    
+    public abstract boolean mustDeath(int pos);
+
+    /**
+     * @return the averageValues
+     */
+    public AverageInizializationForOptimizationMethod getAverageValues() {
+        return averageValues;
+    }
+    
+    public int getWorstAgentCounter() {
+        return this.dataToEvaluateOptimization.getWorstAgentCounter();
+    }
+    
+ /**
+     * @return the posMinPerformace
+     */
+    public int getPosMinPerformace() {
+        return dataToEvaluateOptimization.getPosMinPerformace();
     }
 
     /**
-     * @return the averagePerformance
+     * @return the posMaxPerformace
      */
-    public BigDecimal getAveragePerformance() {
-        return averagePerformance;
+    public int getPosMaxPerformace() {
+        return dataToEvaluateOptimization.getPosMaxPerformace();
     }
+
+    /**
+     * @return the bestAgents
+     */
+    public List<AgentOptimizationValuesForReproduction> getBestAgents() {
+        return dataToEvaluateOptimization.getBestAgents();
+    }
+    
 }

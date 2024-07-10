@@ -59,14 +59,16 @@ public class PtpVectorNeuralNetworkMutationProcessor extends AbstractPtpNeuralNe
                 if(nn.getWeight(i, j)!=0 && i!=j
                         && RandomFactory.getRandomInstance().nextFloat()<getDisconnectionMutationRate()){
                     nn.setWeight(i, j, 0f);
-                    needUpdateEffectiveConnectionsSize = needUpdateEffectiveConnectionsSize || PtpVectorNeuralNetworkBaseUpdatingProcessor.updateLostConection(i, j, nn);             
+                    boolean needUpdate = PtpVectorNeuralNetworkBaseUpdatingProcessor.updateLostConection(i, j, nn);
+                    needUpdateEffectiveConnectionsSize =  needUpdateEffectiveConnectionsSize || needUpdate;             
                 }else
                     //new connections mutation
                     if(nn.getWeight(i, j)==0 && i!=j
                             && RandomFactory.getRandomInstance().nextFloat()<getConnectionMutationRate()){
                         float dw = RandomFactory.getRandomInstance().nextFloat(-getMaxWeightExchangevalue(), getMaxWeightExchangevalue());
                         nn.setWeight(i, j, dw);
-                        needUpdateEffectiveConnectionsSize = needUpdateEffectiveConnectionsSize || PtpVectorNeuralNetworkBaseUpdatingProcessor.updateNewConection(i, j, nn);
+                        boolean needUpdate = PtpVectorNeuralNetworkBaseUpdatingProcessor.updateNewConection(i, j, nn);
+                        needUpdateEffectiveConnectionsSize =   needUpdateEffectiveConnectionsSize || needUpdate;
                 }
                     // Weights mutation
                 if(nn.getWeight(i, j)!=0 && i!=j

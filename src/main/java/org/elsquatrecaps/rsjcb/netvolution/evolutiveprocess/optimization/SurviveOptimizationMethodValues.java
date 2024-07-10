@@ -5,7 +5,8 @@ package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization;
  * @author josep
  */
 public enum SurviveOptimizationMethodValues {
-    AVERAGE(0, "AVERAGE", "Average of vital advantages");
+    AVERAGE(0, "AVERAGE", "Average of vital advantages"),
+    FIX_DEATH_TAX(1, "FIX_DEATH_TAX", "Fix death tax");
     private static SurviveOptimizationMethodValues[] ovalues;
     static {
         ovalues = new SurviveOptimizationMethodValues[SurviveOptimizationMethodValues.values().length];

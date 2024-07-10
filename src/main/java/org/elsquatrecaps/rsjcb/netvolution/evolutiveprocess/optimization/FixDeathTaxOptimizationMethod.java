@@ -14,8 +14,20 @@ import java.util.List;
  *
  * @author josep
  */
-@OptimizationMethodInfo(id=SurviveOptimizationMethodValues.AVERAGE)
-public class AverageOptimizationMethod extends OptimizationMethod{
+@OptimizationMethodInfo(id=SurviveOptimizationMethodValues.FIX_DEATH_TAX, forInitalizingInstanceFromConfig = {"evolutionarySystem.evolutionProcessConditions.fixDeathTaxValue"})
+public class FixDeathTaxOptimizationMethod extends OptimizationMethod{
+    private Double deathTax;
+    private int maxPosition=-1;
+    
+    @Override
+    public void initInstance(Object... v) {
+        if(v.length>0 && v[0]!=null && v[0] instanceof Double){
+            deathTax = (Double) v[0];
+        }else if(v.length>0 && v[0]!=null && v[0] instanceof Integer){
+            deathTax = ((Integer)v[0])/100.0;
+        }
+        maxPosition=-1;
+    }
 
     @Override
     protected DataToEvaluateOptimization getDataToEvaluateOptimization(AgentOptimizationValuesForReproduction[] evolutiveValues){
@@ -25,15 +37,18 @@ public class AverageOptimizationMethod extends OptimizationMethod{
         BigDecimal sumRepAdv=BigDecimal.ZERO;
         Arrays.sort(evolutiveValues);
         List<AgentOptimizationValuesForReproduction> bestAgents = new ArrayList<>();
-        for(int i=0; i<evolutiveValues.length; i++){
-            if(evolutiveValues[i].getVitalAdvantage().compareTo(this.getAverageValues().getAveragePerformance())>0){
-                bestAgents.add(evolutiveValues[i]);
-            }else if(evolutiveValues[i].getVitalAdvantage().compareTo(this.getAverageValues().getAveragePerformance())==0){
-                bestAgents.add(evolutiveValues[i]);
-                worstCounter++;
-            }else{
-                worstCounter++;
+        int l = (int) (evolutiveValues.length*deathTax);
+        for(int i=0; i<l; i++){
+            if(evolutiveValues[i].getVitalAdvantage().compareTo(evolutiveValues[posMinPerformace].getVitalAdvantage())<0){
+                posMinPerformace=i;
             }
+            if(evolutiveValues[i].getVitalAdvantage().compareTo(evolutiveValues[posMaxPerformace].getVitalAdvantage())>0){
+                posMaxPerformace=i;
+            }
+            worstCounter++;
+        }
+        for(int i=l; i<evolutiveValues.length; i++){
+            bestAgents.add(evolutiveValues[i]);
             if(evolutiveValues[i].getVitalAdvantage().compareTo(evolutiveValues[posMinPerformace].getVitalAdvantage())<0){
                 posMinPerformace=i;
             }
@@ -50,11 +65,15 @@ public class AverageOptimizationMethod extends OptimizationMethod{
         for(int i=1; i<bestAgents.size(); i++){
             bestAgents.get(i).reproductionRate = bestAgents.get(i).reproductionRate.divide(sumRepAdv, 30, RoundingMode.HALF_UP);
         }
+        maxPosition=-1;
         return new DataToEvaluateOptimization(posMinPerformace, posMaxPerformace, bestAgents, worstCounter);
     }    
 
     @Override
     public boolean mustDeath(int pos) {
-        return evolutiveValues[pos].getVitalAdvantage().compareTo(getAverageValues().getAveragePerformance())<=0;
+        if(maxPosition==-1){
+            maxPosition=(int) (this.evolutiveValues.length*this.deathTax);
+        }
+        return pos<maxPosition;
     }
 }

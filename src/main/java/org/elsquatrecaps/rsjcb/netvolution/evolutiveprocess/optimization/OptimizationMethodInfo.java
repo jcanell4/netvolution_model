@@ -17,5 +17,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface OptimizationMethodInfo {
     SurviveOptimizationMethodValues id();
-    boolean needAveragePerformanceValue() default false;
+    String[] forInitalizingInstanceFromConfig() default {};
 }

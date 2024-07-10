@@ -1,7 +1,5 @@
 package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization;
 
-import java.math.BigDecimal;
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.*;
 import java.util.HashMap;
 import org.elsquatrecaps.utilities.tools.ClassGroupItem;
 import java.util.List;
@@ -15,12 +13,18 @@ import org.elsquatrecaps.utilities.tools.Pair;
  */
 public class OptimizeMethodItems extends ClassGroupItem<OptimizationMethod>{
     private static final Map<String, OptimizeMethodItems> itemMap=new HashMap<>();
+    private String[] forInitalizingInstanceFromConfig;
     
-
-    public OptimizeMethodItems(String id, Class<OptimizationMethod> type) {
-        super(id, type);
+    public OptimizationMethod getInstance(Object... v) {
+        OptimizationMethod inst = super.getInstance();
+        inst.initInstance(v);
+        return inst;
     }
-
+public OptimizeMethodItems(String id, Class<OptimizationMethod> type, String[] forInitalizingInstanceFromConfig) {
+        super(id, type);
+        this.forInitalizingInstanceFromConfig = forInitalizingInstanceFromConfig;
+    }
+    
     public static OptimizeMethodItems getItem(String key, String packageToSearch){
         if(itemMap.isEmpty()){
             List<OptimizeMethodItems> l = getItemsList(packageToSearch);
@@ -39,8 +43,19 @@ public class OptimizeMethodItems extends ClassGroupItem<OptimizationMethod>{
         return ClassGroupItem.getItemsList(packageToSearch, OptimizationMethodInfo.class, new Callback<Pair<OptimizationMethodInfo, Class<OptimizationMethod>>, OptimizeMethodItems>() {
             @Override
             public OptimizeMethodItems call(Pair<OptimizationMethodInfo, Class<OptimizationMethod>> param) {
-                return new OptimizeMethodItems(param.getFirst().id().getValue(), param.getSecond()); 
+                return new OptimizeMethodItems(
+                        param.getFirst().id().getValue(), 
+                        param.getSecond(), 
+                        param.getFirst().forInitalizingInstanceFromConfig()
+                ); 
             }
         });
     }    
+
+    /**
+     * @return the forInitalizingInstanceFromConfig
+     */
+    public String[] getForInitalizingInstanceFromConfig() {
+        return forInitalizingInstanceFromConfig;
+    }
 }

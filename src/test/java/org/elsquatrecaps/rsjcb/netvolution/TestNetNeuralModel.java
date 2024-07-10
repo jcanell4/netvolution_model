@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import org.elsquatrecaps.rsjcb.netvolution.events.FinishedEvolutionaryCycleEvent;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.SurviveOptimizationMethodValues;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment;
+import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizationMethod;
+import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizeMethodItems;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.InputOutputContributionValues;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.MonotonicStabilityChecker;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.NeuronTypesForStabilityCheckingValues;
@@ -465,7 +467,7 @@ public class TestNetNeuralModel {
                 per,
                 ra,
                 tf,
-                SurviveOptimizationMethodValues.AVERAGE,
+                OptimizeMethodItems.getItem(SurviveOptimizationMethodValues.AVERAGE.getValue()).getInstance(),
                 50,
                 false
         );

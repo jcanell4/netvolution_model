@@ -97,9 +97,9 @@ public class PtpVectorNeuralNetworkBaseUpdatingProcessor {
         for(int i=0; i<net.getMaxNeuronsLength(); i++){
             if(net.getWeight(i, to)!=0 && !net.getNeuron(i).isPathToOutput()){
                 net.getNeuron(i).setPathToOutput(true);
-                if(!net.getNeuron(i).isPathToOutput()){
+//                if(!net.getNeuron(i).isPathToOutput()){
                     updateCascadePathToOutputForNewParticipation(i, net);
-                }
+//                }
             }
         }
     }
