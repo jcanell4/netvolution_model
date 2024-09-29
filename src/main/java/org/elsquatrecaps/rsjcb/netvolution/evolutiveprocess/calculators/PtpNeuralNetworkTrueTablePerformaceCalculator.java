@@ -47,6 +47,6 @@ public class PtpNeuralNetworkTrueTablePerformaceCalculator implements PtpNeuralN
                 success++;
             }
         }
-        return BigDecimal.valueOf(success).divide(BigDecimal.valueOf(differentStimuli), 10, RoundingMode.HALF_UP);
+        return BigDecimal.valueOf(success).divide(BigDecimal.valueOf(differentStimuli), 18, RoundingMode.HALF_UP);
     }
 }

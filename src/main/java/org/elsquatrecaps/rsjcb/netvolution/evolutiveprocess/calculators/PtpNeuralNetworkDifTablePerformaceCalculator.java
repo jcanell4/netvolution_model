@@ -44,6 +44,6 @@ public class PtpNeuralNetworkDifTablePerformaceCalculator implements PtpNeuralNe
             BigDecimal dif = BigDecimal.ONE.subtract(verifier.verify(verifier.getEntry(s), output[0]));
             success = success.add(dif);
         }
-        return success.divide(BigDecimal.valueOf(differentStimuli), 10, RoundingMode.HALF_UP); 
+        return success.divide(BigDecimal.valueOf(differentStimuli), 18, RoundingMode.HALF_UP); 
     }
 }

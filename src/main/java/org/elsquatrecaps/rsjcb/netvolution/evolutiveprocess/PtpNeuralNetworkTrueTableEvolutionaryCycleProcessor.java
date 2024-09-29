@@ -118,8 +118,8 @@ public class PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor {
                 extraData.put(k, (float) f);
             });
         }
-        BigDecimal vitalAdv = sumVitalAdv.divide(new BigDecimal(population.length), 10, RoundingMode.HALF_UP);
-        BigDecimal perf = sumPerf.divide(new BigDecimal(population.length), 5, RoundingMode.HALF_UP);
+        BigDecimal vitalAdv = sumVitalAdv.divide(new BigDecimal(population.length), 18, RoundingMode.HALF_UP);
+        BigDecimal perf = sumPerf.divide(new BigDecimal(population.length), 18, RoundingMode.HALF_UP);
         EvolutionaryCycleInfo ret = renewPopulation(positiveResults, new AverageInizializationForOptimizationMethod(vitalAdv));   
         ret.setAvgPerformance(perf.doubleValue());
         ret.setMaxPerformance(maxPerf.doubleValue());

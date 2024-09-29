@@ -39,11 +39,17 @@ public class PtpNeuralNetworkTrueTableGlobalCalculator{
     }
     
     public PerformaceAndReproductiveAdvantage calculate(PtpNeuralNetwork agent){
-        BigDecimal p = BigDecimal.ZERO;
+        BigDecimal p=BigDecimal.ZERO;
         BigDecimal va=BigDecimal.ZERO;
         BigDecimal ra=BigDecimal.ZERO;
         
-        va = p = vitalAdvantageCalculators.get(0).calculate(agent);
+        p = vitalAdvantageCalculators.get(0).calculate(agent);
+        va = BigDecimal.valueOf(p.doubleValue()*(
+                vitalAdvantageCalculators.size()
+                +vitalAdvantageCalculators.size()
+                +reproductuvaAdvantageCalculators.size()
+                +reproductuvaAdvantageCalculators.size())
+        );
         for(int i=1; i<vitalAdvantageCalculators.size(); i++){
             PtpNeuralNetworkSinglePropertyCalculator calc = vitalAdvantageCalculators.get(i);
             va = va.add(calc.calculate(agent));
