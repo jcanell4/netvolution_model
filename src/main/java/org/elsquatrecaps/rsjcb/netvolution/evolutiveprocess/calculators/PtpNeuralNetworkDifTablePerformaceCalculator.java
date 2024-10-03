@@ -1,7 +1,6 @@
 package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.math.RoundingMode;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetwork;
 import org.elsquatrecaps.utilities.tools.ComparableArrayOf;
@@ -10,7 +9,7 @@ import org.elsquatrecaps.utilities.tools.ComparableArrayOf;
  *
  * @author josep
  */
-@SinglePropertyCalculatorInfo(id="performance", description = "performance")
+@SinglePropertyCalculatorInfo(id="difperformance", description = "performance")
 public class PtpNeuralNetworkDifTablePerformaceCalculator implements PtpNeuralNetworkDifTableSinglePropertyCalculator{
     private final AbsoluteDiferenceTableResponseVerifier verifier;
 
