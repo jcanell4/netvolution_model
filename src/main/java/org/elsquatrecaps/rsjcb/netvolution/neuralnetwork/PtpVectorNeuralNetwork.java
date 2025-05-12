@@ -46,12 +46,28 @@ public class PtpVectorNeuralNetwork implements PtpNeuralNetwork {
     }
     
     @Override
+    public Float[] getLastUpdateSM(){
+        return this.smHandler.getValues();
+    }
+    
+    @Override
+    public Float[] getLastUpdate(){
+        Float[] ret;
+        ret = new Float[getOutputNeurons().size()];
+        for(int i=0; i<ret.length; i++){
+            ret[i] = getOutputNeurons().get(i).getStateValue();
+        }
+        return ret;
+    }
+    
+    @Override
     public Float[] updateSM(Float[] input){
         updateForCicles(getMaxLoopsForResults(), input);
         this.smHandler.outputUpdate(getOutputNeurons());
         return this.smHandler.getValues();
     }
     
+    @Override
     public Float[] update(Float[] input){
         Float[] ret;
         updateForCicles(getMaxLoopsForResults(), input);
@@ -94,7 +110,7 @@ public class PtpVectorNeuralNetwork implements PtpNeuralNetwork {
                         if(getNeuron(j).getUpdateStatus().equals(UpdateStatusValues.UNSTABLE)){
                             getNeuron(i).setUpdateStatus(UpdateStatusValues.UNSTABLE);
                         }
-//                        if(getNeuron(i).getUpdateStatus().equals(UpdateStatusValues.UPDATED)){
+//                        if(getNeuron(iter).getUpdateStatus().equals(UpdateStatusValues.UPDATED)){
 //                            System.out.println("ALERTA");
 //                        }
                         getNeuron(i).partialUpdateForSum(getNeurons()[j].getStateValue()*getConnections()[i][j]);
@@ -274,6 +290,17 @@ public class PtpVectorNeuralNetwork implements PtpNeuralNetwork {
         return neurons.length;
     }
 
+        @Override
+    public int getActualNeuronsLength() {
+        int ret =0;
+        for(int i=0; i< neurons.length; i++){
+            if(neurons[i].isPathToOutput()){
+                ret++;
+            }
+        }
+        return ret;
+    }
+    
     @Override
     public PtpNeuron getNeuron(int id) {
         return neurons[id];
@@ -354,7 +381,7 @@ public class PtpVectorNeuralNetwork implements PtpNeuralNetwork {
         float minConnections = Math.max(this.inputNeurons.size(), this.outputNeurons.size());
         minConnections = Math.min(minConnections, this.getActualInputToOutputConnectionsLength());
         c = Math.abs(this.getActualConnectionsLength()-minConnections);
-        return c/maxConnections;
+        return c/(maxConnections-minConnections);
     }
 
     @Override
@@ -458,4 +485,124 @@ public class PtpVectorNeuralNetwork implements PtpNeuralNetwork {
         hash = 83 * hash + Objects.hashCode(this.outputNeurons);
         return hash;
     }
+
+    @Override
+    public void train(Float[][] inputs, Float[][] outputs, int iterations) {
+        train(inputs, outputs, iterations, 0.1f);
+    }
+    
+    @Override
+    public void train(Float[][] inputs, Float[][] outputs, int iterations, float learningRate) {
+        for(int iter=0; iter<iterations; iter++){
+            trainOneEpoche(inputs, outputs, learningRate);
+        }
+    }
+    
+    public void trainOneEpoche(Float[][] inputs, Float[][] outputs, float learningRate){
+        for(int i=0; i<inputs.length; i++){
+            trainOneEntry(inputs[i], outputs[i], learningRate);
+        }
+    }
+    
+    public void trainOneEntry(Float[] inputs, Float[] outputs, float learningRate){
+        update(inputs);
+        
+        // Backpropagation       
+        double[] error = new double[getNeurons().length];
+        double[] delta = new double[getNeurons().length];
+        final double epsilon = 1e-6;
+        final int maxIterations = getNeurons().length;            
+        for(int i = getNeurons().length-getOutputNeuronsLength(); i< getNeurons().length; i++) { // Només les neurones de sortida contribueixen a l'error
+            error[i] = outputs[i - (getNeurons().length - getOutputLength())] - getNeuronValue(i);
+            double derivative = getNeuron(i).getActivationFunction().getYDerivative(getNeuronValue(i));
+            delta[i] = error[i] * derivative;
+        }
+        for(int i=getNeurons().length-getOutputNeuronsLength()-1; i>=0; i--){// De sortida a entrada
+                double sum = 0;
+                for (int j = 0; j < getNeurons().length; j++) {
+                    sum = getWeight(j, i) * delta[j]; // Ponderem l'error per la força de connexió
+                }
+                error[i] = sum;
+                double derivative = getNeuron(i).getActivationFunction().getYDerivative(getNeuronValue(i));
+                delta[i] = sum * derivative; // Propagació del gradient            
+        }
+        for(int iteration = 1; !errorConverged(error, epsilon) && iteration<getNeurons().length; iteration++){
+            for (int i = 0; i <getNeurons().length; i++) { //Repetim per a cada neurona o fins que l'error sigui massa petit
+                double sum = 0;
+                for (int j = 0; j < getNeurons().length; j++) {
+                    sum += getWeight(j, i) * delta[j]; // Ponderem l'error per la força de connexió
+                }
+                error[i] += sum;
+                double derivative = getNeuron(i).getActivationFunction().getYDerivative(getNeuronValue(i));
+                delta[i] = error[i] * derivative; // Propagació del gradient
+            }
+        }
+
+            // ACTUALITZACIÓ DELS PESOS
+            for (int i = 0; i < getNeurons().length; i++) {
+                for (int j = 0; j < getNeurons().length; j++) {
+                    double w = getWeight(i, j) + learningRate * delta[i] * getNeuronSum(j);
+                    setWeight(i, j, (float) w);
+                }
+            }
+
+            // Actualitza biaixos (només per a neurones no d'entrada)
+            for (int i = 0; i <getNeurons().length ; i++) {
+                double b = learningRate * delta[i];
+                getNeuron(i).changeBias((float)b);
+            }            
+    }
+    
+    private boolean errorConverged(double[] error, double epsilon){
+        for (double error1 : error) {
+            if (Math.abs(error1) > epsilon) {
+                return false; // Encara no ha convergit
+            }
+        }
+        return true;        
+    }
+    
+//    public float[] forward(float[] input){
+//        int numNeurons = this.getNeurons().length;
+//        float[] output = new float[numNeurons];
+//        for (int i = 0; i < numNeurons; i++) {
+//            double sum = 0;
+//            for (int j = 0; j < numNeurons; j++) {
+//                sum += W[i][j] * input[j];
+//            }
+//            output[i] = sigmoid(sum, beta[i]);
+//        }
+//        return output;        
+//    }
+//    
+//    public SimpleMatrix forward(SimpleMatrix inputs) {
+//        SimpleMatrix mweights = new SimpleMatrix(this.connections);
+//        SimpleMatrix mbias = new SimpleMatrix(this.getNeurons().length, 1);
+//        for(int i=0; i<this.getNeurons().length; i++){
+//            mbias.set(i, this.getNeuron(i).getBias());
+//        }        
+//        return forward(inputs, mweights, mbias);        
+//    }
+//    
+//    public SimpleMatrix forward(SimpleMatrix inputs, SimpleMatrix W, SimpleMatrix b) {
+//        SimpleMatrix h = new SimpleMatrix(W.getNumRows(), 1);
+//        
+//        // Inicialitza les entrades
+//        for (int i = 0; i < getInputNeuronsLength(); i++) {
+//            h.set(i, 0, inputs.get(i));
+//        }
+//
+//        // Propaga fins a convergència (màxim 100 iteracions)
+//        for (int step = 0; step < 100; step++) {
+//            SimpleMatrix newH = W.mult(h).plus(b);
+//            // Aplica la sigmoide modificada a cada neurona (excepte entrades)
+//            for (int neuronId = getInputNeuronsLength(); neuronId < newH.getNumRows(); neuronId++) {
+//                double z = newH.get(neuronId, 0);
+//                newH.set(neuronId, 0, this.getNeuron(neuronId).getActivationFunction().getResult( (float) z));
+//            }
+//            if (newH.minus(h).normF() < 1e-6) break;  // Convergència
+//            h = newH;
+//        }
+//        return h;
+//    }
 }

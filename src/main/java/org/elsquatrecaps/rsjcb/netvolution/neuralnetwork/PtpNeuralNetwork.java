@@ -41,6 +41,10 @@ public interface PtpNeuralNetwork extends Cloneable, Serializable{
 
     boolean isIsStable();
 
+    Float[] getLastUpdateSM();
+
+    Float[] getLastUpdate();
+    
     Float[] updateSM(Float[] input);
 
     Float[] update(Float[] input);
@@ -49,6 +53,8 @@ public interface PtpNeuralNetwork extends Cloneable, Serializable{
     
     PtpNeuron getNeuron(int id);
     
+    int getActualNeuronsLength();
+  
     int getActualConnectionsLength();
     
     int getActualInputToOutputConnectionsLength();
@@ -72,6 +78,10 @@ public interface PtpNeuralNetwork extends Cloneable, Serializable{
     int getOutputNeuronsLength();
     
     int getInputNeuronsLength();
+    
+    void train(Float[][] inputs, Float[][] outputs,  int iterations);
+
+    void train(Float[][] inputs, Float[][] outputs,  int iterations, float learningRate);
     
 //    int getEfectiveBackwardSize();
 //    

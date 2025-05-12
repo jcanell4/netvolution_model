@@ -89,4 +89,17 @@ public class Random /*implements RandomGenerator*/{
         return origin + nextLong(bound-origin);
     }
     
+    public double nextGaussian() {
+        return generator.nextGaussian();
+    }
+    
+    public double nextGaussian(double mean) {
+        double std = mean * 0.25;
+        return generator.nextGaussian()*(mean+std);
+    }
+
+    public double nextGaussian(double mean, double std) {
+        double factor = mean + std;
+        return generator.nextGaussian()*factor;
+    }
 }

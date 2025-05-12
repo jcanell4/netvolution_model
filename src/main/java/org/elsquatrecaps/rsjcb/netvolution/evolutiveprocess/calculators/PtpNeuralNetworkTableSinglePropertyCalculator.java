@@ -6,6 +6,6 @@ import org.elsquatrecaps.utilities.tools.ComparableArrayOf;
  *
  * @author josep
  */
-public interface PtpNeuralNetworkDifTableSinglePropertyCalculator extends PtpNeuralNetworkSinglePropertyCalculator{
+public interface PtpNeuralNetworkTableSinglePropertyCalculator extends PtpNeuralNetworkSinglePropertyCalculator{
     void addValueCorrespondence(ComparableArrayOf<Float> input, ComparableArrayOf<Float> output);
 }

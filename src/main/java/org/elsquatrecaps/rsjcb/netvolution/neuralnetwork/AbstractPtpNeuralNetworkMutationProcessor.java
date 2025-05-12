@@ -9,6 +9,9 @@ package org.elsquatrecaps.rsjcb.netvolution.neuralnetwork;
  * @author josep
  */
 public abstract class AbstractPtpNeuralNetworkMutationProcessor implements PtpNeuralNetworkMutationProcessor {
+    public static final int GAUSSIAN_METHOD_TO_CALCULATE_MUTATION_INCREMENTS=0;
+    public static final int RAMDOM_METHOD_TO_CALCULATE_MUTATION_INCREMENTS=1;
+    public static final int FIXED_METHOD_TO_CALCULATE_MUTATION_INCREMENTS=2;
     
     protected float thresholdMutationRate = 0.01f;
     protected float maxThresholdExchangeFactorValue = 0.1f;
@@ -19,6 +22,7 @@ public abstract class AbstractPtpNeuralNetworkMutationProcessor implements PtpNe
     protected float receiverNeuronNumberMutationRate = 0.005f;
     protected float responseNeuronNumberMutationRate = 0.005f;
     private int inputContributionrobability = 50;
+    private int methodToCalculateMutationIncrements=GAUSSIAN_METHOD_TO_CALCULATE_MUTATION_INCREMENTS;
 
     public AbstractPtpNeuralNetworkMutationProcessor() {
     }
@@ -188,6 +192,20 @@ public abstract class AbstractPtpNeuralNetworkMutationProcessor implements PtpNe
      */
     public void setInputContributionrobability(int inputContributionrobability) {
         this.inputContributionrobability = inputContributionrobability;
+    }
+
+    /**
+     * @return the inputContributionrobability
+     */
+    public int getMethodToCalculateMutationIncrements() {
+        return methodToCalculateMutationIncrements;
+    }
+
+    /**
+     * @param inputContributionrobability the inputContributionrobability to set
+     */
+    public void setMethodToCalculateMutationIncrements(int methodToCalculateMutationIncrements) {
+        this.methodToCalculateMutationIncrements = methodToCalculateMutationIncrements;
     }
     
 }

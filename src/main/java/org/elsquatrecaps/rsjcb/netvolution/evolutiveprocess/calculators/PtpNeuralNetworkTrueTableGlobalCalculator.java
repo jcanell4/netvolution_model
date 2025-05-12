@@ -16,16 +16,16 @@ public class PtpNeuralNetworkTrueTableGlobalCalculator{
     List<PtpNeuralNetworkSinglePropertyCalculator> vitalAdvantageCalculators= new ArrayList<>();
     List<PtpNeuralNetworkSinglePropertyCalculator> reproductuvaAdvantageCalculators= new ArrayList<>();
 
-//    public PtpNeuralNetworkTrueTableGlobalCalculator(String[] vitalAdvantageCalculators, String[] reproductiveAdvantageCalculators) {
-//        this(Arrays.asList(vitalAdvantageCalculators), Arrays.asList(reproductiveAdvantageCalculators));        
-//    }
-    
     public PtpNeuralNetworkTrueTableGlobalCalculator(String[] vitalAdvantageCalculators, String[] reproductiveAdvantageCalculators, Float[][] environmentInputSet, Float[][] environmentOutputSet) {
         this(Arrays.asList(vitalAdvantageCalculators), Arrays.asList(reproductiveAdvantageCalculators), environmentInputSet, environmentOutputSet);        
     }
     
     public PtpNeuralNetworkTrueTableGlobalCalculator(List<String> vitalAdvantageCalculators, List<String> reproductiveAdvantageCalculators, Float[][] environmentInputSet, Float[][] environmentOutputSet) {
-        PtpNeuralNetworkDifTableSinglePropertyCalculator calc = (PtpNeuralNetworkDifTableSinglePropertyCalculator) SinglePropertyCalculatorItems.getItem("performance").getInstance();
+        this("performance", vitalAdvantageCalculators, reproductiveAdvantageCalculators, environmentInputSet, environmentOutputSet);
+    }
+
+    public PtpNeuralNetworkTrueTableGlobalCalculator(String performanceId, List<String> vitalAdvantageCalculators, List<String> reproductiveAdvantageCalculators, Float[][] environmentInputSet, Float[][] environmentOutputSet) {
+        PtpNeuralNetworkTableSinglePropertyCalculator calc = (PtpNeuralNetworkTableSinglePropertyCalculator) SinglePropertyCalculatorItems.getItem(performanceId).getInstance();
         this.vitalAdvantageCalculators.add(calc);
         for(int i=0; i<environmentInputSet.length; i++){
             calc.addValueCorrespondence(new ComparableArrayOf<>(environmentInputSet[i]), new ComparableArrayOf<>(environmentOutputSet[i]));

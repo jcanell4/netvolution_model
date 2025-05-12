@@ -29,6 +29,22 @@ public class PtpVectorNeuralNetworkMutationProcessor extends AbstractPtpNeuralNe
         super(thresholdMutationRate, maxThresholdExchangeFactorValue, weightsMutationRate, maxWeightExchangevalue, disconnectionMutationRate, connectionMutationRate);
     }
     
+    private float getIncrement(float maxvalue, int method){
+        float l;
+        switch (method) {
+            case GAUSSIAN_METHOD_TO_CALCULATE_MUTATION_INCREMENTS:
+                l = (float) RandomFactory.getRandomInstance().nextGaussian(0, maxvalue);
+                break;
+            case RAMDOM_METHOD_TO_CALCULATE_MUTATION_INCREMENTS:
+                l = RandomFactory.getRandomInstance().nextFloat(-maxvalue, maxvalue);
+                break; 
+            default:
+                l = maxvalue;
+                break;
+        }
+        return l;
+    }
+    
     @Override
     public PtpVectorNeuralNetwork muteFrom(PtpNeuralNetwork nnToMute){
         boolean needUpdateEffectiveConnectionsSize=false;
@@ -43,12 +59,13 @@ public class PtpVectorNeuralNetworkMutationProcessor extends AbstractPtpNeuralNe
         for(int i=0; i<nn.getNeurons().length; i++) {
             //threshold
             if(RandomFactory.getRandomInstance().nextFloat()<getThresholdMutationRate()){
-                float l = RandomFactory.getRandomInstance().nextFloat(-getMaxThresholdExchangeFactorValue(), getMaxThresholdExchangeFactorValue());
+                float l = getIncrement(getMaxThresholdExchangeFactorValue(), getMethodToCalculateMutationIncrements());
                 nn.changeNeuronActivationFunctionLinearity(i, l);
             }
             //bias
             if(RandomFactory.getRandomInstance().nextFloat()<getWeightsMutationRate()){
-                nn.getNeuron(i).changeBias(RandomFactory.getRandomInstance().nextFloat(-getMaxWeightExchangevalue(), getMaxWeightExchangevalue()));
+                float l = getIncrement(getMaxWeightExchangevalue(), getMethodToCalculateMutationIncrements());
+                nn.getNeuron(i).changeBias(l);
             }            
         }
         
@@ -65,7 +82,7 @@ public class PtpVectorNeuralNetworkMutationProcessor extends AbstractPtpNeuralNe
                     //new connections mutation
                     if(nn.getWeight(i, j)==0 && i!=j
                             && RandomFactory.getRandomInstance().nextFloat()<getConnectionMutationRate()){
-                        float dw = RandomFactory.getRandomInstance().nextFloat(-getMaxWeightExchangevalue(), getMaxWeightExchangevalue());
+                        float dw = getIncrement(getMaxWeightExchangevalue(), getMethodToCalculateMutationIncrements());
                         nn.setWeight(i, j, dw);
                         boolean needUpdate = PtpVectorNeuralNetworkBaseUpdatingProcessor.updateNewConection(i, j, nn);
                         needUpdateEffectiveConnectionsSize =   needUpdateEffectiveConnectionsSize || needUpdate;
@@ -73,7 +90,7 @@ public class PtpVectorNeuralNetworkMutationProcessor extends AbstractPtpNeuralNe
                     // Weights mutation
                 if(nn.getWeight(i, j)!=0 && i!=j
                         && RandomFactory.getRandomInstance().nextFloat()<getWeightsMutationRate()){
-                    float dw = nn.getWeight(i, j) + RandomFactory.getRandomInstance().nextFloat(-getMaxWeightExchangevalue(), getMaxWeightExchangevalue());
+                    float dw = nn.getWeight(i, j) + getIncrement(getMaxWeightExchangevalue(), getMethodToCalculateMutationIncrements());
                     if(dw!=0){
                         nn.setWeight(i, j, dw);
                     }

@@ -9,38 +9,14 @@ import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpSingleNeuron;
 @ActivationFunctionInfo(id="SIGM", name="Sigmoid")
 public class SigmoidActivationFunction implements ActivationFunction{
     private static final long serialVersionUID = 2478541542732890015L;        
-    private float betaFactor;
     private float beta;
-
-    public SigmoidActivationFunction(float betaFactor, float beta) {
-        this.betaFactor = betaFactor;
-        this.beta = beta;
-    }
 
     public SigmoidActivationFunction(float beta) {
         this.beta = beta;
-        this.betaFactor=1;
     }
 
     public SigmoidActivationFunction() {
         beta=0.01f;
-        betaFactor=1;
-    }
-    
-    
-
-    /**
-     * @return the betaFactor
-     */
-    public float getBetaFactor() {
-        return betaFactor;
-    }
-
-    /**
-     * @param betaFactor the betaFactor to set
-     */
-    public void setBetaFactor(float betaFactor) {
-        this.betaFactor = betaFactor;
     }
 
     /**
@@ -58,7 +34,7 @@ public class SigmoidActivationFunction implements ActivationFunction{
     }
     
     public float getBetaTemperature(){
-        return this.beta*this.betaFactor;
+        return this.beta;
     }
 
     @Override
@@ -67,19 +43,30 @@ public class SigmoidActivationFunction implements ActivationFunction{
     }
 
     @Override
+    public Float getXDerivative(Float x) {
+        Float s = getResult(x);
+        return getYDerivative(s);
+    }
+
+    @Override
+    public Float getYDerivative(Float y) {
+        return getBetaTemperature() * y * (1-y);
+    }
+
+    @Override
     public void changeLinearity(Float l) {
         this.beta+=l;
         if(this.beta<0){
             this.beta=0;
         }
-        if(this.beta>20){
-            this.beta=20;
+        if(this.beta>100){
+            this.beta=100;
         }
     }
 
     @Override
     public Object clone() throws CloneNotSupportedException {
-        SigmoidActivationFunction ret = new SigmoidActivationFunction(betaFactor, beta);
+        SigmoidActivationFunction ret = new SigmoidActivationFunction(beta);
         return ret;
     }
     
@@ -95,7 +82,6 @@ public class SigmoidActivationFunction implements ActivationFunction{
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 89 * hash + Float.floatToIntBits(this.betaFactor);
         hash = 89 * hash + Float.floatToIntBits(this.beta);
         return hash;
     }
@@ -103,5 +89,10 @@ public class SigmoidActivationFunction implements ActivationFunction{
     @Override
     public String toString() {
         return String.format("AF.B:%5.3f", getBetaTemperature());
+    }
+    
+    @Override
+    public Float getTemperature(){
+        return getXDerivative(0f);
     }
 }

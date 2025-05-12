@@ -10,21 +10,13 @@ import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpSingleNeuron;
 public class ThresholdLinearFunction implements ActivationFunction{
     private static final long serialVersionUID = 2478541542732890016L;        
     private float hiddenThreshold;
-    private float thresholdFactor;
 
     public ThresholdLinearFunction() {
-        hiddenThreshold=Float.MAX_VALUE;
-        thresholdFactor=1;
-    }
-
-    public ThresholdLinearFunction(float threshold, float thresholtFactor) {
-        this.hiddenThreshold = threshold;
-        this.thresholdFactor = thresholtFactor;
+        hiddenThreshold=1000;
     }
     
     public ThresholdLinearFunction(float threshold) {
         this.hiddenThreshold = threshold;
-        this.thresholdFactor = 1;
     }
     
     
@@ -32,12 +24,38 @@ public class ThresholdLinearFunction implements ActivationFunction{
     @Override
     public Float getResult(Float x) {
         Float ret;
-        if(x>this.getThreshold()){
+        if(x>=this.getThreshold()){
             ret = 1f;
         }else if(x<=-this.getThreshold()){
             ret = 0f;
         }else{
-            ret = x/this.getThreshold();
+            ret = (x+this.getThreshold())/(this.getThreshold()+this.getThreshold());
+        }
+        return ret;
+    }   
+
+    @Override
+    public Float getXDerivative(Float x) {
+        Float ret;
+        if(x>=this.getThreshold()){
+            ret = 0f;
+        }else if(x<=-this.getThreshold()){
+            ret = 0f;
+        }else{
+            ret = 1/(this.getThreshold()+this.getThreshold());
+        }
+        return ret;
+    }   
+
+    @Override
+    public Float getYDerivative(Float y) {
+        Float ret;
+        if(1f == y){
+            ret = 0f;
+        }else if(y== 0f){
+            ret = 0f;
+        }else{
+            ret = 1/(this.getThreshold()+this.getThreshold());
         }
         return ret;
     }   
@@ -46,7 +64,7 @@ public class ThresholdLinearFunction implements ActivationFunction{
      * @return the threshold
      */
     public float getThreshold() {
-        return hiddenThreshold*thresholdFactor;
+        return hiddenThreshold;
     }
 
     /**
@@ -56,20 +74,6 @@ public class ThresholdLinearFunction implements ActivationFunction{
         this.hiddenThreshold = hthreshold;
     }
 
-    /**
-     * @return the thresholtFactor
-     */
-    public float getThresholdFactor() {
-        return thresholdFactor;
-    }
-
-    /**
-     * @param thresholtFactor the thresholtFactor to set
-     */
-    public void setThresholdFactor(float thresholtFactor) {
-        this.thresholdFactor = thresholtFactor;
-    }
-    
     public float getHiddenThreshold() {
         return hiddenThreshold;
     }
@@ -77,11 +81,17 @@ public class ThresholdLinearFunction implements ActivationFunction{
     @Override
     public void changeLinearity(Float l) {
         this.hiddenThreshold += l;
+        if(hiddenThreshold<0){
+            hiddenThreshold=0f;
+        }
+        if(hiddenThreshold>1000){
+            hiddenThreshold=1000;
+        }
     }
     
     @Override
     public Object clone() throws CloneNotSupportedException {
-        ThresholdLinearFunction ret = new ThresholdLinearFunction(hiddenThreshold, thresholdFactor);
+        ThresholdLinearFunction ret = new ThresholdLinearFunction(hiddenThreshold);
         return ret;
     }
     
@@ -98,12 +108,16 @@ public class ThresholdLinearFunction implements ActivationFunction{
     public int hashCode() {
         int hash = 3;
         hash = 73 * hash + Float.floatToIntBits(this.hiddenThreshold);
-        hash = 73 * hash + Float.floatToIntBits(this.thresholdFactor);
         return hash;
     }
 
     @Override
     public String toString() {
         return String.format("Thr: %f", getThreshold());
+    }
+    
+    @Override
+    public Float getTemperature(){
+        return getXDerivative(0f);
     }
 }

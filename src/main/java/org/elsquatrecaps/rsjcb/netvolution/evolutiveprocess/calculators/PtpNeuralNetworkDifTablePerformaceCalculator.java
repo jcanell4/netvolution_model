@@ -10,7 +10,7 @@ import org.elsquatrecaps.utilities.tools.ComparableArrayOf;
  * @author josep
  */
 @SinglePropertyCalculatorInfo(id="difperformance", description = "performance")
-public class PtpNeuralNetworkDifTablePerformaceCalculator implements PtpNeuralNetworkDifTableSinglePropertyCalculator{
+public class PtpNeuralNetworkDifTablePerformaceCalculator implements PtpNeuralNetworkTableSinglePropertyCalculator{
     private final AbsoluteDiferenceTableResponseVerifier verifier;
 
     public PtpNeuralNetworkDifTablePerformaceCalculator() {

@@ -1,7 +1,5 @@
 package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess;
 
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.SurviveOptimizationMethodValues;
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.PtpNeuralNetworkTrueTableGlobalCalculator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -10,11 +8,8 @@ import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryEvent;
 import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryProcesSubscriptor;
 import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryProcessEventStore;
 import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryProcessInfoEditor;
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizationMethod;
-import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpVectorNeuralNetwork;
-import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetworkConfiguration;
-import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpVectorNeuralNetworkMutationProcessor;
-import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpVectorNeuralNetworkRandomInitializer;
+import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetwork;
+import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetworkMutationProcessor;
 import org.elsquatrecaps.utilities.tools.Pair;
 
 /**
@@ -27,6 +22,16 @@ public class RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment exte
     List<Pair<String, Consumer<EvolutionaryEvent>>> consumers = new ArrayList<>();
     List<Pair<String, EvolutionaryProcesSubscriptor>> subscriptors = new ArrayList<>();
     
+    protected RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment(
+            PtpNeuralNetwork[] population,
+            PtpNeuralNetworkMutationProcessor mutationProcessor){
+        super(population, mutationProcessor);        
+    }
+    
+    protected RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment(PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor cycleProcessor){
+        super(cycleProcessor);        
+    }
+    
 //    public RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment(int populationSize, PtpNeuralNetworkConfiguration nnConfig, 
 //            Float[][] environmentInputSet, Float[][] environmentOutputSet, List<String> propertiesToFollow) {
 //        this( populationSize, nnConfig, environmentInputSet, environmentOutputSet, new String[0], new String[] {"neuronConnectionDensity"}, propertiesToFollow);
@@ -36,46 +41,46 @@ public class RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment exte
 //            Float[][] environmentInputSet, Float[][] environmentOutputSet, String[] performance, String[] repAdv, List<String> propertiesToFollow) {
 //        this(populationSize, nnConfig, environmentInputSet, environmentOutputSet, Arrays.asList(performance), Arrays.asList(repAdv), propertiesToFollow, SurviveOptimizationMethodValues.DYNAMIC_RATE, 50);
 //    }
-    public RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment(
-            int populationSize, 
-            PtpNeuralNetworkConfiguration nnConfig, 
-            Float[][] environmentInputSet, 
-            Float[][] environmentOutputSet, 
-            List<String> performance, List<String> repAdv, List<String> propertiesToFollow, 
-            OptimizationMethod optimizationMethod,
-//            SurviveOptimizationMethodValues deathRateType, 
-            double survivalRate,
-            boolean keepProgenyLines) {
-        super(new PtpVectorNeuralNetwork[populationSize], 
-                new PtpNeuralNetworkTrueTableGlobalCalculator(
-                        performance, 
-                        repAdv, 
-                        environmentInputSet, 
-                        environmentOutputSet), 
-                new PtpVectorNeuralNetworkMutationProcessor(), 
-                propertiesToFollow,
-                optimizationMethod,
-//                deathRateType,
-                survivalRate,
-                keepProgenyLines);
-        for(int i=0; i<populationSize; i++){
-            PtpVectorNeuralNetwork net = new PtpVectorNeuralNetwork();
-            PtpVectorNeuralNetworkRandomInitializer.initialize(net, nnConfig);
-            this.getPopulation()[i] = net;
-        }
-        this.getMutationProcessor().setConnectionMutationRate(nnConfig.getConnectionMutationRate());
-        this.getMutationProcessor().setDisconnectionMutationRate(nnConfig.getDisconnectionMutationRate());
-        this.getMutationProcessor().setMaxThresholdExchangeFactorValue(nnConfig.getMaxThresholdExchangeFactorValue());
-        this.getMutationProcessor().setMaxWeightExchangevalue(nnConfig.getMaxWeightExchangevalue());
-        this.getMutationProcessor().setReceiverNeuronNumberMutationRate(nnConfig.getReceiverNeuronNumberMutationRate());
-        this.getMutationProcessor().setResponseNeuronNumberMutationRate(nnConfig.getResponseNeuronNumberMutationRate());
-        this.getMutationProcessor().setThresholdMutationRate(nnConfig.getThresholdMutationRate());
-        this.getMutationProcessor().setWeightsMutationRate(nnConfig.getWeightsMutationRate());
-        this.getMutationProcessor().setInputContributionrobability(nnConfig.getInputContributionrobability());
-        if(environmentInputSet.length!=environmentOutputSet.length){
-            throw new RuntimeException("The input array must be the same length as the output array");
-        }
-    }
+//    public RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment(
+//            int populationSize, 
+//            PtpNeuralNetworkConfiguration nnConfig, 
+//            Float[][] environmentInputSet, 
+//            Float[][] environmentOutputSet, 
+//            List<String> performance, List<String> repAdv, List<String> propertiesToFollow, 
+//            OptimizationMethod optimizationMethod,
+////            SurviveOptimizationMethodValues deathRateType, 
+//            double survivalRate,
+//            boolean keepProgenyLines) {
+//        super(new PtpVectorNeuralNetwork[populationSize], 
+//                new PtpNeuralNetworkTrueTableGlobalCalculator(
+//                        performance, 
+//                        repAdv, 
+//                        environmentInputSet, 
+//                        environmentOutputSet), 
+//                new PtpVectorNeuralNetworkMutationProcessor(), 
+//                propertiesToFollow,
+//                optimizationMethod,
+////                deathRateType,
+//                survivalRate,
+//                keepProgenyLines);
+//        for(int i=0; i<populationSize; i++){
+//            PtpVectorNeuralNetwork net = new PtpVectorNeuralNetwork();
+//            PtpVectorNeuralNetworkRandomInitializer.initialize(net, nnConfig);
+//            this.getPopulation()[i] = net;
+//        }
+//        this.getMutationProcessor().setConnectionMutationRate(nnConfig.getConnectionMutationRate());
+//        this.getMutationProcessor().setDisconnectionMutationRate(nnConfig.getDisconnectionMutationRate());
+//        this.getMutationProcessor().setMaxThresholdExchangeFactorValue(nnConfig.getMaxThresholdExchangeFactorValue());
+//        this.getMutationProcessor().setMaxWeightExchangevalue(nnConfig.getMaxWeightExchangevalue());
+//        this.getMutationProcessor().setReceiverNeuronNumberMutationRate(nnConfig.getReceiverNeuronNumberMutationRate());
+//        this.getMutationProcessor().setResponseNeuronNumberMutationRate(nnConfig.getResponseNeuronNumberMutationRate());
+//        this.getMutationProcessor().setThresholdMutationRate(nnConfig.getThresholdMutationRate());
+//        this.getMutationProcessor().setWeightsMutationRate(nnConfig.getWeightsMutationRate());
+//        this.getMutationProcessor().setInputContributionrobability(nnConfig.getInputContributionrobability());
+//        if(environmentInputSet.length!=environmentOutputSet.length){
+//            throw new RuntimeException("The input array must be the same length as the output array");
+//        }
+//    }
 
     @Override
     public void init(float averagePerformanceForStopping, float desiredPerformance, int maxTimes) {

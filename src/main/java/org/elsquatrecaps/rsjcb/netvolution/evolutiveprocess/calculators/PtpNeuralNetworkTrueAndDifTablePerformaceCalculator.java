@@ -10,7 +10,7 @@ import org.elsquatrecaps.utilities.tools.ComparableArrayOf;
  * @author josep
  */
 @SinglePropertyCalculatorInfo(id="performance", description = "performance")
-public class PtpNeuralNetworkTrueAndDifTablePerformaceCalculator implements PtpNeuralNetworkDifTableSinglePropertyCalculator{
+public class PtpNeuralNetworkTrueAndDifTablePerformaceCalculator implements PtpNeuralNetworkTableSinglePropertyCalculator{
     private final AbsoluteDiferenceTableResponseVerifier difVerifier;
     private final TrueTableResponseVerifier<ComparableArrayOf<Float>, ComparableArrayOf<Float>> trueVerifier;
 
@@ -47,8 +47,8 @@ public class PtpNeuralNetworkTrueAndDifTablePerformaceCalculator implements PtpN
         BigDecimal success = BigDecimal.ZERO;
         int differentStimuli = difVerifier.getEntriesSize();
         for(int s=0; s<differentStimuli; s++){
-            Float[] output = agent.update(difVerifier.getEntry(s).getValues());
-            BigDecimal dif = BigDecimal.ONE.subtract(difVerifier.verify(difVerifier.getEntry(s), output[0]));
+            Float[] output = agent.updateSM(difVerifier.getEntry(s).getValues());
+            BigDecimal dif = BigDecimal.ONE.subtract(difVerifier.verify(difVerifier.getEntry(s), agent.getLastUpdate()[0]));
             success = success.add(dif);
             Boolean v = trueVerifier.verify(trueVerifier.getEntry(s), new ComparableArrayOf<>(output));
             if(v){

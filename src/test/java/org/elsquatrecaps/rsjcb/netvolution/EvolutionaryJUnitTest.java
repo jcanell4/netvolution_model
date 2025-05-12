@@ -248,7 +248,7 @@ public class EvolutionaryJUnitTest {
         expRes[2] = 0.49977f;
         expRes[3] = 0.50057f;
         
-        validateValues(results, expRes, costV.doubleValue(), 0.0, densV.doubleValue(), 0.0/90.0);        
+        validateValues(results, expRes, costV.doubleValue(), 0.0, densV.doubleValue(), 0.0/88.0);        
     }
     
     @Test
@@ -288,7 +288,7 @@ public class EvolutionaryJUnitTest {
         expRes[2] = 0.49071f;
         expRes[3] = 0.49150f;
         
-        validateValues(results, expRes, costV.doubleValue(), 1.0, densV.doubleValue(), 1.0/90.0);
+        validateValues(results, expRes, costV.doubleValue(), 1.0, densV.doubleValue(), 1.0/88.0);
     }
 
     @Test
@@ -335,7 +335,7 @@ public class EvolutionaryJUnitTest {
         expRes[2] = 0.52694f;
         expRes[3] = 0.48196f;
         
-        validateValues(results, expRes, costV.doubleValue(), 0.0, densV.doubleValue(), 3.0/90.0);        
+        validateValues(results, expRes, costV.doubleValue(), 0.0, densV.doubleValue(), 3.0/88.0);        
     }
     
     @Test

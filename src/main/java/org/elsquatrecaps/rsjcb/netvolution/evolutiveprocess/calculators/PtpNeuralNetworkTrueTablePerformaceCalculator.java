@@ -10,7 +10,7 @@ import org.elsquatrecaps.utilities.tools.ComparableArrayOf;
  * @author josep
  */
 @SinglePropertyCalculatorInfo(id="ttperformance", description = "performance")
-public class PtpNeuralNetworkTrueTablePerformaceCalculator implements PtpNeuralNetworkTrueTableSinglePropertyCalculator{
+public class PtpNeuralNetworkTrueTablePerformaceCalculator implements PtpNeuralNetworkTableSinglePropertyCalculator{
     private final TrueTableResponseVerifier<ComparableArrayOf<Float>, ComparableArrayOf<Float>> verifier;
 
     public PtpNeuralNetworkTrueTablePerformaceCalculator() {
@@ -40,7 +40,7 @@ public class PtpNeuralNetworkTrueTablePerformaceCalculator implements PtpNeuralN
 //        Float resolveEficency=0f;
         int differentStimuli = verifier.getEntriesSize();
         for(int s=0; s<differentStimuli; s++){
-            Float[] output = agent.update(verifier.getEntry(s).getValues());
+            Float[] output = agent.updateSM(verifier.getEntry(s).getValues());
             Boolean v = verifier.verify(verifier.getEntry(s), new ComparableArrayOf<>(output));
             if(v){
                 success++;

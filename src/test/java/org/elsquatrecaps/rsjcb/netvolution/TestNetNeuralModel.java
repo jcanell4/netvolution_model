@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import org.elsquatrecaps.rsjcb.netvolution.events.FinishedEvolutionaryCycleEvent;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.SurviveOptimizationMethodValues;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment;
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizationMethod;
+import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironmentBuilder;
 import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizeMethodItems;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.InputOutputContributionValues;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.MonotonicStabilityChecker;
@@ -27,7 +27,6 @@ import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpVectorNeuralNetworkR
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpVectorNeuralNetworkWeightDistributionInitializer;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.actfunctions.SigmoidActivationFunction;
 import org.elsquatrecaps.util.random.RandomFactory;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 
@@ -344,7 +343,7 @@ public class TestNetNeuralModel {
         ObjectOutputStream oos = null;
         try {
             MonotonicStabilityChecker ch = new MonotonicStabilityChecker(0.01f);
-            PtpSingleNeuron neuro = new PtpSingleNeuron(1, new SigmoidActivationFunction(0.5f, 1), ch);
+            PtpSingleNeuron neuro = new PtpSingleNeuron(1, new SigmoidActivationFunction(0.5f), ch);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             oos = new ObjectOutputStream(baos);
             oos.writeObject(neuro);
@@ -459,27 +458,26 @@ public class TestNetNeuralModel {
         List<String> per = new ArrayList<>();
         List<String> ra = new ArrayList<>();
         List<String> tf = new ArrayList<>();
-        RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment env = new RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment(
-                100, 
-                configuration, 
-                environmentInputSet, 
-                environmentOutputSet,
-                per,
-                ra,
-                tf,
-                OptimizeMethodItems.getItem(SurviveOptimizationMethodValues.AVERAGE.getValue()).getInstance(),
-                50,
-                false
-        );
-        env.getMutationProcessor().setConnectionMutationRate(configuration.getConnectionMutationRate());
-        env.getMutationProcessor().setDisconnectionMutationRate(configuration.getDisconnectionMutationRate());
-        env.getMutationProcessor().setMaxThresholdExchangeFactorValue(configuration.getMaxThresholdExchangeFactorValue());
-        env.getMutationProcessor().setMaxWeightExchangevalue(configuration.getMaxWeightExchangevalue());
-        env.getMutationProcessor().setReceiverNeuronNumberMutationRate(configuration.getReceiverNeuronNumberMutationRate());
-        env.getMutationProcessor().setResponseNeuronNumberMutationRate(configuration.getResponseNeuronNumberMutationRate());
-        env.getMutationProcessor().setThresholdMutationRate(configuration.getThresholdMutationRate());
-        env.getMutationProcessor().setWeightsMutationRate(configuration.getWeightsMutationRate());
-        env.getMutationProcessor().setInputContributionrobability(configuration.getInputContributionrobability());
+        RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironmentBuilder builder = new RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironmentBuilder();
+        builder.setPopulationSize(100)
+                .setNnConfig(configuration)
+                .setEnvironmentInputSet(environmentInputSet)
+                .setEnvironmentOutputSet(environmentOutputSet)
+                .setViAdv(per)
+                .setRepAdv(ra)
+                .setNnPropertiesToFollow(tf)
+                .setOptimizationMethod(OptimizeMethodItems.getItem(SurviveOptimizationMethodValues.AVERAGE.getValue()).getInstance())
+                .setSurvivalRateForOptimizationMethod(50);
+        RunnablePtpVectorNeuralNetworkTrueTableEvolutionaryEnvironment env = builder.build();
+//        env.getMutationProcessor().setConnectionMutationRate(configuration.getConnectionMutationRate());
+//        env.getMutationProcessor().setDisconnectionMutationRate(configuration.getDisconnectionMutationRate());
+//        env.getMutationProcessor().setMaxThresholdExchangeFactorValue(configuration.getMaxThresholdExchangeFactorValue());
+//        env.getMutationProcessor().setMaxWeightExchangevalue(configuration.getMaxWeightExchangevalue());
+//        env.getMutationProcessor().setReceiverNeuronNumberMutationRate(configuration.getReceiverNeuronNumberMutationRate());
+//        env.getMutationProcessor().setResponseNeuronNumberMutationRate(configuration.getResponseNeuronNumberMutationRate());
+//        env.getMutationProcessor().setThresholdMutationRate(configuration.getThresholdMutationRate());
+//        env.getMutationProcessor().setWeightsMutationRate(configuration.getWeightsMutationRate());
+//        env.getMutationProcessor().setInputContributionrobability(configuration.getInputContributionrobability());
         
         env.addEventHandler(FinishedEvolutionaryCycleEvent.eventType, ev -> screenWriteDataOnFinishEvolutionCycle((FinishedEvolutionaryCycleEvent) ev));
 //        env.addEventHandler(ErrorOnProcessEvolution.eventType, ev -> this.onErrorProcessEvolution((ErrorOnProcessEvolution) ev));

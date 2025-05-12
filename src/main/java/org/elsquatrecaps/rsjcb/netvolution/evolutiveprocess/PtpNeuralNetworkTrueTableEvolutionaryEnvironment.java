@@ -4,17 +4,13 @@
  */
 package org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess;
 
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.SurviveOptimizationMethodValues;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.calculators.PtpNeuralNetworkTrueTableGlobalCalculator;
 import org.elsquatrecaps.rsjcb.netvolution.events.CompletedEvolutionaryProcessEvent;
 import org.elsquatrecaps.rsjcb.netvolution.events.EvolutionaryProcessObserver;
 import org.elsquatrecaps.rsjcb.netvolution.events.FinishedEvolutionaryCycleEvent;
 import org.elsquatrecaps.rsjcb.netvolution.events.InitialEvolutionaryProcessEvent;
-import org.elsquatrecaps.rsjcb.netvolution.events.ProgenyLinesEvent;
-import org.elsquatrecaps.rsjcb.netvolution.evolutiveprocess.optimization.OptimizationMethod;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetwork;
 import org.elsquatrecaps.rsjcb.netvolution.neuralnetwork.PtpNeuralNetworkMutationProcessor;
 import org.elsquatrecaps.utilities.concurrence.Monitor;
@@ -24,46 +20,55 @@ import org.elsquatrecaps.utilities.concurrence.Monitor;
  * @author josep
  */
 public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
-    
-    private final PtpNeuralNetwork[] population;
-    private PtpNeuralNetworkTrueTableGlobalCalculator performanceCalculator;
-    private final PtpNeuralNetworkMutationProcessor mutationProcessor;
     private float averagePerformanceForStopping;
     private float desiredPerformance;
     private int maxTimes;
     private PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor cycleProcessor = null;
     private EvolutionaryProcessObserver observer=null;
     private boolean endProcess = false;
-    private Monitor<Boolean> endedProcess = new Monitor<>(false);
-    private StopProcessMonitor stopProcess = new StopProcessMonitor();
-
-    public PtpNeuralNetworkTrueTableEvolutionaryEnvironment(PtpNeuralNetwork[] population,
-            PtpNeuralNetworkTrueTableGlobalCalculator performanceCalculator, 
-            PtpNeuralNetworkMutationProcessor mutationProcessor, 
-            List<String> propertiesToFollow, 
-            OptimizationMethod optimizationMethod,
-//            SurviveOptimizationMethodValues surviveOptimizationMethodValues, 
-            double survivalRate,
-//            double maxSurvivalRate,
-            boolean keepProgenyLines
-    ) {
-//       SinglePropertyCalculatorItems item;
-       this.population = population;
-       this.performanceCalculator = performanceCalculator;
-       this.mutationProcessor = mutationProcessor;
+    private final Monitor<Boolean> endedProcess = new Monitor<>(false);
+    private final StopProcessMonitor stopProcess = new StopProcessMonitor();
+    
+    protected PtpNeuralNetworkTrueTableEvolutionaryEnvironment(PtpNeuralNetwork[] population,
+            PtpNeuralNetworkMutationProcessor mutationProcessor) {
        this.cycleProcessor = new PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor(
-               population, 
-               performanceCalculator, 
-               mutationProcessor, 
-               propertiesToFollow,
-               optimizationMethod,
-//               surviveOptimizationMethodValues,
-               survivalRate,
-//               maxSurvivalRate,
-               keepProgenyLines
-       );
+               population, mutationProcessor);
     }
 
+    protected PtpNeuralNetworkTrueTableEvolutionaryEnvironment(PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor cycleProcessor) {
+       this.cycleProcessor = cycleProcessor;
+    }
+
+
+//    public PtpNeuralNetworkTrueTableEvolutionaryEnvironment(PtpNeuralNetwork[] population,
+//            PtpNeuralNetworkTrueTableGlobalCalculator performanceCalculator, 
+//            PtpNeuralNetworkMutationProcessor mutationProcessor, 
+//            List<String> propertiesToFollow, 
+//            OptimizationMethod optimizationMethod,
+////            SurviveOptimizationMethodValues surviveOptimizationMethodValues, 
+//            double survivalRate,
+////            double maxSurvivalRate,
+//            boolean keepProgenyLines
+//    ) {
+////       SinglePropertyCalculatorItems item;
+//       this.population = population;
+//       this.performanceCalculator = performanceCalculator;
+////       this.mutationProcessor = mutationProcessor;
+//       this.cycleProcessor = new PtpNeuralNetworkTrueTableEvolutionaryCycleProcessor(
+//               population, 
+//               performanceCalculator, 
+//               mutationProcessor, 
+//               propertiesToFollow,
+//               optimizationMethod,
+////               surviveOptimizationMethodValues,
+//               survivalRate,
+////               maxSurvivalRate,
+//               keepProgenyLines
+//       );
+//    }
+
+    
+    
     public void init(float averagePerformanceForStopping, float desiredPerformance, int maxTimes) {
         this.averagePerformanceForStopping = averagePerformanceForStopping;
         this.desiredPerformance = desiredPerformance;
@@ -118,10 +123,10 @@ public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
     }
     
     private PtpNeuralNetwork[] clonePopulation(){
-        PtpNeuralNetwork[] ret = new PtpNeuralNetwork[this.population.length];
+        PtpNeuralNetwork[] ret = new PtpNeuralNetwork[this.getPopulation().length];
         for(int i=0; i< ret.length; i++){
             try {
-                ret[i] = (PtpNeuralNetwork) population[i].clone();
+                ret[i] = (PtpNeuralNetwork) this.getPopulation()[i].clone();
             } catch (CloneNotSupportedException ex) {
                 Logger.getLogger(PtpNeuralNetworkTrueTableEvolutionaryEnvironment.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -155,9 +160,9 @@ public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
                 getObserver().updateEvent(new FinishedEvolutionaryCycleEvent(times, info));
             }
         }
-        if(getCycleProcessor().getProgenyLines()!=null){
-            getObserver().updateEvent(new ProgenyLinesEvent(getCycleProcessor().getProgenyLines()));
-        }
+//        if(getCycleProcessor().getProgenyLines()!=null){
+//            getObserver().updateEvent(new ProgenyLinesEvent(getCycleProcessor().getProgenyLines()));
+//        }
         if(goal_achieved){
             reason=CompletedEvolutionaryProcessEvent.GOAL_ACHIEVED_BY_EVOLUTION;
         }else if(endProcess){
@@ -165,7 +170,7 @@ public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
         }else{
             reason = CompletedEvolutionaryProcessEvent.MAXIMUM_CYCLE_NUMBER_REACHED;
         }
-        getObserver().updateEvent(new CompletedEvolutionaryProcessEvent(population, reason));  
+        getObserver().updateEvent(new CompletedEvolutionaryProcessEvent(this.getPopulation(), reason));  
 //        getObserver().close();
         synchronized(endedProcess){
             endedProcess.setValue(true);
@@ -173,7 +178,7 @@ public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
         }
 
     }
-
+    
     public float getAveragePerformanceForStopping() {
         return averagePerformanceForStopping;
     }
@@ -202,22 +207,23 @@ public class PtpNeuralNetworkTrueTableEvolutionaryEnvironment {
      * @return the population
      */
     public PtpNeuralNetwork[] getPopulation() {
-        return population;
+        return cycleProcessor.getPopulation();
     }
 
-    /**
-     * @return the performanceCalculator
-     */
-    public PtpNeuralNetworkTrueTableGlobalCalculator getPerformanceCalculator() {
-        return performanceCalculator;
-    }
+//    /**
+//     * @return the performanceCalculator
+//     */
+//    public PtpNeuralNetworkTrueTableGlobalCalculator getPerformanceCalculator() {
+//        return performanceCalculator;
+//    }
 
-    /**
-     * @return the mutationProcessor
-     */
-    public PtpNeuralNetworkMutationProcessor getMutationProcessor() {
-        return mutationProcessor;
-    }
+//    /**
+//     * @return the mutationProcessor
+//     */
+//    public PtpNeuralNetworkMutationProcessor getMutationProcessor() {
+////        return mutationProcessor;
+//        return this.cycleProcessor.getMutationProcessor();
+//    }
 
     /**
      * @return the cycleProcessor
